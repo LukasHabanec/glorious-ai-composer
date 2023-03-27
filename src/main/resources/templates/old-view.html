@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Composer</title>
+    <link rel="stylesheet" th:href="@{/styles.css}"/>
+
+</head>
+<body>
+<h2 th:text="${composition.title}">Title</h2>
+
+<!--<form action="#" th:action="@{'/composer/composition/' + ${composition.id} + '/change'}" method="post"-->
+<!--      enctype="multipart/form-data" th:object="${changeRequest}">-->
+<!--    <table>-->
+<!--        <tr>-->
+<!--            <td>-->
+<!--                <label for="tempo">Tempo</label>-->
+<!--            </td>-->
+<!--            <td>-->
+<!--                <input type="number" min="40" max="240" id="tempo" name="tempo"-->
+<!--                       th:value="${composition.tempo}" th:field="*{changeRequest.tempo}">-->
+<!--            </td>-->
+<!--        </tr>-->
+<!--        <tr>-->
+<!--            <td>-->
+<!--                <button type="submit">Make That Change</button>-->
+<!--            </td>-->
+<!--        </tr>-->
+<!--    </table>-->
+<!--    <ul>-->
+<!--        <li>-->
+<!--            <label for="tempo">Tempo</label>-->
+<!--            <input type="number" min="40" max="240" id="tempo" name="tempo" th:value="${composition.tempo}">-->
+<!--            <label for="isMelodyOn">Melody</label>-->
+<!--            <input type="checkbox" th:checked="${composition.isMelodyOn}" id="isMelodyOn" name="isMelodyOn">-->
+<!--            <label for="isAccompanimentOn">Harmony</label>-->
+<!--            <input type="checkbox" th:checked="${composition.isAccompanimentOn}" id="isAccompanimentOn" name="isAccompanimentOn">-->
+<!--        </li>-->
+<!--        <li>-->
+<!--            <label for="key">Key</label>-->
+<!--            <select id="key" name="key" required>-->
+<!--                <option th:each="key : ${T(com.habanec.composer2.assets.QuintCircle).values()}"-->
+<!--                        th:value="${key.ordinal()}"-->
+<!--                        th:text="${key.label}"-->
+<!--                        th:selected="${key.index.equals(composition.quintCircleMainKeyIndex)}">-->
+<!--                </option>-->
+<!--            </select>-->
+<!--            <label for="modus">Modus</label>-->
+<!--            <select id="modus" name="modus" required>-->
+<!--                <option th:each="mode: ${T(com.habanec.composer2.assets.Mode).values()}"-->
+<!--                        th:value="${mode.ordinal()}"-->
+<!--                        th:text="${mode.label}"-->
+<!--                        th:selected="${mode.ordinal().equals(composition.modeIndex)}">-->
+<!--                </option>-->
+<!--            </select>-->
+<!--        </li>-->
+<!--        <li>-->
+<!--            <button type="submit">Make That Change</button>-->
+<!--        </li>-->
+<!--    </ul>-->
+<!--</form>-->
+
+
+<table>
+    <thead>
+    <tr>
+        <th></th>
+        <th>Nr.</th>
+        <th>Shifter</th>
+        <th>Melody</th>
+        <th>Key</th>
+<!--        <th>Harmony</th>-->
+<!--        <th colspan="4">Figurations</th>-->
+<!--        <th>AccoKey</th>-->
+    </tr>
+    </thead>
+    <tbody>
+    <tr th:each="measure : ${composition.melodyMeasureList}">
+        <td><a th:href="@{'/composer/composition/' + ${composition.id} + '/play?measure=' + ${measure.index}}">Play</a></td>
+        <td th:text="${measureStat.count}"></td>
+        <td>
+            <a th:href="@{'/composer/composition/' + ${composition.id} + '/shiftDown?index=' + ${measure.index}}"><<</a>
+            <span th:text="${measure.userSpecialShifter}"></span>
+            <a th:href="@{'/composer/composition/' + ${composition.id} + '/shiftUp?index=' + ${measure.index}}">>></a>
+        </td>
+        <td th:text="${measure.patternString}"></td>
+        <td th:text="${measure.currentKey}"></td>
+
+<!--        <td th:switch="${measure.harmonyFragmentationString}" style="background: gray;"-->
+<!--            th:with="fields=(${composition.accompaniment.getHarmonyFieldsParMeasureIndex(measureStat.index)})">-->
+<!--            <div th:case="[4___]">-->
+<!--                <select name="currentChord" style="width: 400px;" id="test">-->
+<!--                    <option th:each="harmonyGrade : ${fields.get(0).possibleHarmonyGrades}"-->
+<!--                            th:value="${harmonyGrade}"-->
+<!--                            th:text="${harmonyGrade} + ' ' +-->
+<!--                            ${fields.get(0).harmonyGradesWithAccordance.get(harmonyGrade)} + '%'"-->
+<!--                            th:selected="${harmonyGrade.equals(fields.get(0).currentHarmonyGrade)}">-->
+<!--                    </option>-->
+<!--                </select>-->
+<!--            </div>-->
+<!--            <div th:case="[2_2_]">-->
+<!--                <select name="currentChord" style="width: 198px;">-->
+<!--                    <option th:each="harmonyGrade : ${fields.get(0).possibleHarmonyGrades}"-->
+<!--                            th:value="${harmonyGrade}"-->
+<!--                            th:text="${harmonyGrade} + ' ' +-->
+<!--                            ${fields.get(0).harmonyGradesWithAccordance.get(harmonyGrade)} + '%'"-->
+<!--                            th:selected="${harmonyGrade.equals(fields.get(0).currentHarmonyGrade)}">-->
+<!--                    </option>-->
+<!--                </select>-->
+<!--                <select name="currentChord" style="width: 198px;">-->
+<!--                    <option th:each="harmonyGrade : ${fields.get(1).possibleHarmonyGrades}"-->
+<!--                            th:value="${harmonyGrade}"-->
+<!--                            th:text="${harmonyGrade} + ' ' +-->
+<!--                            ${fields.get(1).harmonyGradesWithAccordance.get(harmonyGrade)} + '%'"-->
+<!--                            th:selected="${harmonyGrade.equals(fields.get(1).currentHarmonyGrade)}">-->
+<!--                    </option>-->
+<!--                </select>-->
+<!--            </div>-->
+<!--            <div th:case="[3__1]">-->
+<!--                <select name="currentChord" style="width: 298px;">-->
+<!--                    <option th:each="harmonyGrade : ${fields.get(0).possibleHarmonyGrades}"-->
+<!--                            th:value="${harmonyGrade}"-->
+<!--                            th:text="${harmonyGrade} + ' ' + ${fields.get(0).harmonyGradesWithAccordance.get(harmonyGrade)} + '%'"-->
+<!--                            th:selected="${harmonyGrade.equals(fields.get(0).currentHarmonyGrade)}">-->
+<!--                    </option>-->
+<!--                </select>-->
+<!--                <select name="currentChord" style="width: 98px;">-->
+<!--                    <option th:each="harmonyGrade : ${fields.get(1).possibleHarmonyGrades}"-->
+<!--                            th:value="${harmonyGrade}"-->
+<!--                            th:text="${harmonyGrade} + ' ' + ${fields.get(1).harmonyGradesWithAccordance.get(harmonyGrade)} + '%'"-->
+<!--                            th:selected="${harmonyGrade.equals(fields.get(1).currentHarmonyGrade)}">-->
+<!--                    </option>-->
+<!--                </select>-->
+<!--            </div>-->
+<!--            <div th:case="[2_11]">-->
+<!--                <select name="currentChord" style="width: 198px;">-->
+<!--                    <option th:each="harmonyGrade : ${fields.get(0).possibleHarmonyGrades}"-->
+<!--                            th:value="${harmonyGrade}"-->
+<!--                            th:text="${harmonyGrade} + ' ' + ${fields.get(0).harmonyGradesWithAccordance.get(harmonyGrade)} + '%'"-->
+<!--                            th:selected="${harmonyGrade.equals(fields.get(0).currentHarmonyGrade)}">-->
+<!--                    </option>-->
+<!--                </select>-->
+<!--                <select name="currentChord" style="width: 97px;">-->
+<!--                    <option th:each="harmonyGrade : ${fields.get(1).possibleHarmonyGrades}"-->
+<!--                            th:value="${harmonyGrade}"-->
+<!--                            th:text="${harmonyGrade} + ' ' + ${fields.get(1).harmonyGradesWithAccordance.get(harmonyGrade)} + '%'"-->
+<!--                            th:selected="${harmonyGrade.equals(fields.get(1).currentHarmonyGrade)}">-->
+<!--                    </option>-->
+<!--                </select>-->
+<!--                <select name="currentChord" style="width: 97px;">-->
+<!--                    <option th:each="harmonyGrade : ${fields.get(2).possibleHarmonyGrades}"-->
+<!--                            th:value="${harmonyGrade}"-->
+<!--                            th:text="${harmonyGrade} + ' ' + ${fields.get(2).harmonyGradesWithAccordance.get(harmonyGrade)} + '%'"-->
+<!--                            th:selected="${harmonyGrade.equals(fields.get(2).currentHarmonyGrade)}">-->
+<!--                    </option>-->
+<!--                </select>-->
+<!--            </div>-->
+<!--            <div th:case="[112_]">-->
+<!--                <select name="currentChord" style="width: 97px;">-->
+<!--                    <option th:each="harmonyGrade : ${fields.get(0).possibleHarmonyGrades}"-->
+<!--                            th:value="${harmonyGrade}"-->
+<!--                            th:text="${harmonyGrade} + ' ' + ${fields.get(0).harmonyGradesWithAccordance.get(harmonyGrade)} + '%'"-->
+<!--                            th:selected="${harmonyGrade.equals(fields.get(0).currentHarmonyGrade)}">-->
+<!--                    </option>-->
+<!--                </select>-->
+<!--                <select name="currentChord" style="width: 97px;">-->
+<!--                    <option th:each="harmonyGrade : ${fields.get(1).possibleHarmonyGrades}"-->
+<!--                            th:value="${harmonyGrade}"-->
+<!--                            th:text="${harmonyGrade} + ' ' + ${fields.get(1).harmonyGradesWithAccordance.get(harmonyGrade)} + '%'"-->
+<!--                            th:selected="${harmonyGrade.equals(fields.get(1).currentHarmonyGrade)}">-->
+<!--                    </option>-->
+<!--                </select>-->
+<!--                <select name="currentChord" style="width: 198px;">-->
+<!--                    <option th:each="harmonyGrade : ${fields.get(2).possibleHarmonyGrades}"-->
+<!--                            th:value="${harmonyGrade}"-->
+<!--                            th:text="${harmonyGrade} + ' ' + ${fields.get(2).harmonyGradesWithAccordance.get(harmonyGrade)} + '%'"-->
+<!--                            th:selected="${harmonyGrade.equals(fields.get(2).currentHarmonyGrade)}">-->
+<!--                    </option>-->
+<!--                </select>-->
+<!--            </div>-->
+<!--            <div th:case="[1111]">-->
+<!--                <select name="currentChord" style="width: 97px;">-->
+<!--                    <option th:each="harmonyGrade : ${fields.get(0).possibleHarmonyGrades}"-->
+<!--                            th:value="${harmonyGrade}"-->
+<!--                            th:text="${harmonyGrade} + ' ' + ${fields.get(0).harmonyGradesWithAccordance.get(harmonyGrade)} + '%'"-->
+<!--                            th:selected="${harmonyGrade.equals(fields.get(0).currentHarmonyGrade)}">-->
+<!--                    </option>-->
+<!--                </select>-->
+<!--                <select name="currentChord" style="width: 97px;">-->
+<!--                    <option th:each="harmonyGrade : ${fields.get(1).possibleHarmonyGrades}"-->
+<!--                            th:value="${harmonyGrade}"-->
+<!--                            th:text="${harmonyGrade} + ' ' + ${fields.get(1).harmonyGradesWithAccordance.get(harmonyGrade)} + '%'"-->
+<!--                            th:selected="${harmonyGrade.equals(fields.get(1).currentHarmonyGrade)}">-->
+<!--                    </option>-->
+<!--                </select>-->
+<!--                <select name="currentChord" style="width: 97px;">-->
+<!--                    <option th:each="harmonyGrade : ${fields.get(2).possibleHarmonyGrades}"-->
+<!--                            th:value="${harmonyGrade}"-->
+<!--                            th:text="${harmonyGrade} + ' ' + ${fields.get(2).harmonyGradesWithAccordance.get(harmonyGrade)} + '%'"-->
+<!--                            th:selected="${harmonyGrade.equals(fields.get(2).currentHarmonyGrade)}">-->
+<!--                    </option>-->
+<!--                </select>-->
+<!--                <select name="currentChord" style="width: 97px;">-->
+<!--                    <option th:each="harmonyGrade : ${fields.get(3).possibleHarmonyGrades}"-->
+<!--                            th:value="${harmonyGrade}"-->
+<!--                            th:text="${harmonyGrade} + ' ' + ${fields.get(3).harmonyGradesWithAccordance.get(harmonyGrade)} + '%'"-->
+<!--                            th:selected="${harmonyGrade.equals(fields.get(3).currentHarmonyGrade)}">-->
+<!--                    </option>-->
+<!--                </select>-->
+<!--            </div>-->
+<!--        </td>-->
+<!--        <td th:each="field : ${composition.accompaniment.getHarmonyFieldsParMeasureIndex(measureStat.index)}"-->
+<!--            th:colspan="${field.lengthInBeats}"-->
+<!--            style="background: gray;">-->
+<!--            <span th:text="${field.label}"></span>-->
+<!--        </td>-->
+<!--        <td th:text="${composition.accompaniment.getMeasureList.get(measureStat.index).getCurrentKey()}"></td>-->
+<!--        <td>-->
+<!--            <input type="checkbox" name="locked" th:checked="${measure.locked}"/>-->
+<!--        </td>-->
+
+
+    </tr>
+    </tbody>
+</table>
+
+
+<a th:href="@{'/composer/composition/' + ${composition.id} + '/play'}">Play</a>
+<a th:href="@{'/composer/composition/' + ${composition.id} + '/stop'}">Stop</a>
+<br>
+<p th:if="${message != null}" th:text="${message}"></p>
+<p th:if="${message == null}" th:text="${composition.title}"></p>
+<br>
+<a th:href="@{'/composer/composition/' + ${composition.id} + '/save'}">Save</a>
+<!--<a th:href="@{/composer/composition/export-midi}">Export to Midi</a>-->
+
+</body>
+
+</html>
