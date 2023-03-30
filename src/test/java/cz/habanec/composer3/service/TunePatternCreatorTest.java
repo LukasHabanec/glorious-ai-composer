@@ -28,7 +28,7 @@ class TunePatternCreatorTest {
 
     @Test
     void tunePatternWorking() {
-        var c = sut.createTunePattern(0,0, TunePatternCreator.Eccentricity.LOW_ECCENTRICITY);
+        var c = sut.createTunePattern(0,0,0);
 //        System.out.println(c);
     }
 }

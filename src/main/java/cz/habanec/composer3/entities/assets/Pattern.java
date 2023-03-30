@@ -51,7 +51,7 @@ public abstract class Pattern {
     private Long id;
 
     @Column(name = "body", nullable = false)
-    protected String body;
+    private String body;
 
     @Setter
     @Column(name = "form_association_id")

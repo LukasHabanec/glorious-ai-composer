@@ -4,10 +4,6 @@ import cz.habanec.composer3.entities.Composition;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
-import java.util.Objects;
-
 @Service
 @RequiredArgsConstructor
 public class MidiPlaybackService {
@@ -15,7 +11,8 @@ public class MidiPlaybackService {
     private final MidiSequencerService sequencerService;
 
     public void playMyComposition(Composition composition, Integer measureIndex) {
-        measureIndex = Objects.isNull(measureIndex) ? 0 : measureIndex;
+//        System.out.println("MidiPlaybackService::" + composition.getMelody().getMelodyMeasureList());
+        if (measureIndex == null) { measureIndex = 0; }
         sequencerService.midiInit();
         sequencerService.feedMidiSequence(composition, measureIndex);
         sequencerService.play();
@@ -23,14 +20,5 @@ public class MidiPlaybackService {
 
     public void stopPlayingCurrentComposition() {
         sequencerService.stop();
-    }
-
-    public boolean exportMidi(Composition myComposition) {
-        sequencerService.midiInit();
-        return sequencerService.record(myComposition,
-                "skladby/" +
-                        LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyMMdd-HH:mm")),
-                myComposition.getId().toString()
-        );
     }
 }
