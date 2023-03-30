@@ -1,6 +1,7 @@
 package cz.habanec.composer3;
 
 import cz.habanec.composer3.entities.Composition;
+import cz.habanec.composer3.entities.CompositionForm;
 import cz.habanec.composer3.repositories.CompositionFormRepo;
 import cz.habanec.composer3.repositories.CompositionRepo;
 import cz.habanec.composer3.repositories.MelodyMeasureRepo;
@@ -64,14 +65,9 @@ public class Composer3Application implements CommandLineRunner {
 		SpringApplication.run(Composer3Application.class, args);
 	}
 
-	// done novy koncept pro tunePattern
-	// - bude vznikat bez opakovani, právě 9 hodnot (pro vice not system cykleni), ale
- 	// done moznost repetovat tony podle density 0 - 100 (100= vsechny stejne)
-	// done vymysli, jestli radeji ukladat finalni podobu patternu do db, nebo ponechat jen raw 9-clennou verzi a k ni
-	// done nove schema nesouci zaznam o repetovani, neco jako 0_2 = nulta hodnota dvakrat, 4_3 = ctvrta hodnota trikrat ???
-	//todo víc než refactor accompanimentu mě zajímá vše níže - RND, začnu přes CLrunner, ať vím, co nemám, až pak FE=form,
-	// accomp chci přidat na požádání, až bude melodie - chci aby reagovala na hustotu melodie,
-	// spíš než na patternSchematech - ty jsou dementní, zvaž proč je nezrušit
+
+	// todo accomp chci přidat na požádání, až bude melodie - chci aby reagovala na hustotu melodie,
+	//  spíš než na patternSchematech - ty jsou dementní, zvaž proč je nezrušit
 	// todo uvaha - kazdou novou formu je treba prve ulozit, pak ji lze vybrat pro tvorbu nove skladby.
 	//  - davam ji kratky nazev, mela by se pak objevit v nazvu skladby
 	// todo new melody - kolik režimů? (
@@ -87,15 +83,17 @@ public class Composer3Application implements CommandLineRunner {
 	// done melodie kompletně chodí, je načase ustanovit frontend, dto system, controller
 	// done nextMeasureShifter mozna vubec measure nepotrebuje drzet v pameti, staci si to v creatoru predat?
 	// done chci umožnit repetování tónů v rámci tunePatternu - uvazuj o skupine vice tonu!!!
+	// done novy koncept pro tunePattern
+	// - bude vznikat bez opakovani, právě 9 hodnot (pro vice not system cykleni), ale
+	// done moznost repetovat tony podle density 0 - 100 (100= vsechny stejne)
+	// done vymysli, jestli radeji ukladat finalni podobu patternu do db, nebo ponechat jen raw 9-clennou verzi a k ni
+	// done nove schema nesouci zaznam o repetovani, neco jako 0_2 = nulta hodnota dvakrat, 4_3 = ctvrta hodnota trikrat ???
 
 	@Override
 	@Transactional
 	public void run(String... args) throws Exception {
 		System.out.println("Running CL-runner");
-//		migrationService.execSql("db/migration/migrate-modi.sql");
-//		migrationService.execSql("db/migration/migrate-quint-circle.sql");
-//		migrationService.execSql("db/migration/migrate-patterns-english.sql");
-//		migrationService.execSql("db/migration/migrate-form-english.sql");
+//		migrateAssets();
 
 //		var newForm = CompositionForm.builder()
 //				.title("CL-runner")
@@ -104,9 +102,9 @@ public class Composer3Application implements CommandLineRunner {
 //				.melodyRhythmScheme("AABACCBA")
 //				.melodyTuneScheme("AABACCBA")
 //				.build();
+//		compositionFormRepo.save(newForm);
 
-		migrationService.removeWhitespacesFromAllHookPatterns();
-//newFromRandom();
+	newFromRandom();
 
 	}
 
@@ -197,7 +195,14 @@ public class Composer3Application implements CommandLineRunner {
 //						.build()
 //		);
 
+	private void migrateAssets() {
+		migrationService.execSql("db/migration/migrate-modi.sql");
+		migrationService.execSql("db/migration/migrate-quint-circle.sql");
+		migrationService.execSql("db/migration/migrate-patterns-english.sql");
+		migrationService.execSql("db/migration/migrate-form-english.sql");
 
+		migrationService.removeWhitespacesFromAllHookPatterns();
+	}
 
 	private boolean checkUniqueness(String newPattern, List<String> rhythmPatterns) {
 		return rhythmPatterns.stream().noneMatch(newPattern::equals);

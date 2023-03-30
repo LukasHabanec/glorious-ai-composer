@@ -18,7 +18,6 @@ class TunePatternCreatorTest {
     }
     @Test
     void repetitionPatternWorking() {
-//        for (int i = 0; i < 101; i++) {
 
             var c = sut.createRepetitionPattern(8, 50);
 
@@ -28,7 +27,7 @@ class TunePatternCreatorTest {
 
     @Test
     void tunePatternWorking() {
-        var c = sut.createTunePattern(0,0,0);
+        var c = sut.createTunePattern(0,0, TunePatternCreator.Eccentricity.LOW_ECCENTRICITY);
 //        System.out.println(c);
     }
 }
