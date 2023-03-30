@@ -2,6 +2,7 @@ package cz.habanec.composer3.service;
 
 import cz.habanec.composer3.entities.Composition;
 import cz.habanec.composer3.entities.MidiSettings;
+import cz.habanec.composer3.entities.assets.MelodyTunePattern;
 import cz.habanec.composer3.repositories.CompositionFormRepo;
 import cz.habanec.composer3.repositories.CompositionRepo;
 import cz.habanec.composer3.repositories.MelodyMeasureRepo;
@@ -34,6 +35,8 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.Arrays;
 import java.util.List;
+import java.util.function.Predicate;
+import java.util.stream.Collectors;
 
 import static cz.habanec.composer3.utils.PatternStringUtils.WHITESPACE_REGEX_DELIMITER;
 import static cz.habanec.composer3.utils.PatternStringUtils.extractIntegerListFrom;
@@ -53,8 +56,6 @@ public class MigrationService {
     private final CompositionService compositionService;
     private final CompositionCreator compositionCreator;
     private final PatternService patternService;
-
-
 
     @Transactional //TODO figurations, exceptions
     public Composition migrateOldHookCompositionFrom(MigratingCompositionIngredients ingredients) {
@@ -93,7 +94,6 @@ public class MigrationService {
 
         updateShifters(composition, ingredients.getShifters(), ingredients.getStartingGrade());
 
-        compositionService.setCurrentComposition(composition); // todo get rid of
         return composition;
 
     }
@@ -151,6 +151,23 @@ public class MigrationService {
         } catch (SQLException e) {
             throw new RuntimeException("No connection acquired.");
         }
+    }
+
+    @Transactional
+    public void removeWhitespacesFromAllHookPatterns() {
+        var form = compositionFormRepo.findByTitle(HOOK_FORM_KEY).orElseThrow();
+        var existingPatterns = tunePatternRepo.findAllByFormAssociationId(form.getId());
+        existingPatterns.stream().forEach(this::removeWhitespacesFromPatternBody);
+//        tunePatternRepo.saveAll(existingPatterns);
+    }
+
+    private void removeWhitespacesFromPatternBody(MelodyTunePattern pattern) {
+        System.out.println(pattern);
+        var sanitizedBody = pattern.getBody().chars()
+                .mapToObj(c -> (char) c)
+                .filter(Predicate.not(Character::isWhitespace)).map(String::valueOf).collect(Collectors.joining());
+        System.out.println(sanitizedBody);
+        pattern.setBody(sanitizedBody);
     }
 
     @Data
