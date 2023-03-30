@@ -23,6 +23,7 @@ public class CompositionCreator {
     private final MelodyCreator melodyCreator;
     private final CompositionService compositionService;
 
+
     @Value("${midi.resolution}")
     private Integer DEFAULT_MIDI_RESOLUTION;
 
