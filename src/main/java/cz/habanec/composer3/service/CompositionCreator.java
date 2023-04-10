@@ -27,8 +27,11 @@ public class CompositionCreator {
     @Value("${midi.resolution}")
     private Integer DEFAULT_MIDI_RESOLUTION;
 
+
+
+
     @Transactional
-    public Composition createNewComposition(NewCompositionIngredients ingredients) {
+    public Composition buildNewComposition(NewCompositionIngredients ingredients) {
 
         System.out.println("CompositionCreator::createNewComposition: " + ingredients.getTitle());
 

@@ -64,6 +64,10 @@ public class PatternStringUtils {
         return sb.toString().trim();
     }
 
+    public static boolean isPatternNotUnique(String newPattern, List<String> rhythmPatterns) {
+        return rhythmPatterns.stream().anyMatch(newPattern::equals);
+    }
+
     //    public static String getHarmonyFragmentationForView(int harmonyFragmentationIndex) {
 //        int[] harmonyFragmentationPattern = HarmonyFragmentation.patterns[harmonyFragmentationIndex];
 //        StringBuilder sb3 = new StringBuilder("[");

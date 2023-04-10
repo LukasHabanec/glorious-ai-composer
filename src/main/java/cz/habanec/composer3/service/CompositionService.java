@@ -33,7 +33,7 @@ public class CompositionService {
     public CompositionDto getCurrentCompositionForView(Long id) {
 
         if (Objects.isNull(currentComposition) || !id.equals(currentComposition.getId())) {
-            loadComposition(id);
+            currentComposition = loadComposition(id);
         }
         return CompositionDto.builder()
                 .id(currentComposition.getId())
@@ -67,7 +67,6 @@ public class CompositionService {
             var composition = optional.get();
             System.out.printf("CompositionService::loadComposition: %s with '%d' measures.%n",
                     composition, composition.getMelody().getMelodyMeasureList().size());
-            currentComposition = composition;
             return composition;
         } else {
             System.out.printf("CompositionService::loadComposition: %s not found.%n", identifier);
@@ -89,14 +88,8 @@ public class CompositionService {
         if (Objects.isNull(currentComposition) || !id.equals(currentComposition.getId())) {
             return "Inconsistency, not saving.";
         }
-//        var composition = currentComposition;
-//        var storedMelody = composition.getMelody();
-//        composition.setMelody(null);
-//        composition = compositionRepo.save(composition);
-//        storedMelody.setComposition(composition);
-//        storedMelody = melodyRepo.save(storedMelody);
-//        composition.setMelody(storedMelody);
         currentComposition = compositionRepo.save(currentComposition);
+        System.out.println("CompositionService::saveCurrentComposition: " + currentComposition.getTitle());
         return "Successfully saved " + currentComposition.getTitle();
     }
 

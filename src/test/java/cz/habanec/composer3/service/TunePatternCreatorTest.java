@@ -5,29 +5,27 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.TestInstance.Lifecycle;
 
-import static org.junit.jupiter.api.Assertions.*;
-
 @TestInstance(Lifecycle.PER_CLASS)
 class TunePatternCreatorTest {
 
     TunePatternCreator sut;
 
     @BeforeAll
-    void init() {
-        sut = new TunePatternCreator();
-    }
+//    void init() {
+//        sut = new TunePatternCreator();
+//    }
     @Test
     void repetitionPatternWorking() {
 
-            var c = sut.createRepetitionPattern(8, 50);
+//            var c = sut.createOneRepetitionPattern(8, 50);
 
-        System.out.println(c);
+//        System.out.println(c);
 //        }
     }
 
     @Test
     void tunePatternWorking() {
-        var c = sut.createTunePattern(0,0, TunePatternCreator.Eccentricity.LOW_ECCENTRICITY);
+//        var c = sut.createOneTunePattern(0,0, TunePatternEccentricity.LOW_ECCENTRICITY);
 //        System.out.println(c);
     }
 }

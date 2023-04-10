@@ -1,24 +1,15 @@
 package cz.habanec.composer3.service;
 
 import cz.habanec.composer3.entities.Composition;
-import cz.habanec.composer3.entities.MidiSettings;
 import cz.habanec.composer3.entities.assets.MelodyTunePattern;
 import cz.habanec.composer3.repositories.CompositionFormRepo;
-import cz.habanec.composer3.repositories.CompositionRepo;
-import cz.habanec.composer3.repositories.MelodyMeasureRepo;
-import cz.habanec.composer3.repositories.MelodyRepo;
 import cz.habanec.composer3.repositories.MelodyRhythmPatternRepo;
 import cz.habanec.composer3.repositories.MelodyTunePatternRepo;
-import cz.habanec.composer3.repositories.ModusRepo;
-import cz.habanec.composer3.repositories.QuintCircleKeyRepo;
-import cz.habanec.composer3.repositories.TonalKeyRepo;
 import cz.habanec.composer3.service.CompositionCreator.NewCompositionIngredients;
 import cz.habanec.composer3.utils.AlphabetUtils;
-import cz.habanec.composer3.utils.PatternStringUtils;
 import lombok.Builder;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
 import org.springframework.jdbc.datasource.init.ScriptException;
@@ -84,7 +75,7 @@ public class MigrationService {
         var reconstructedTunePatterns = patternService.getRequiredPatternListUsingShuffledIndexes(
                 shuffledTuneIndexes, tunePatterns);
 
-        var composition = compositionCreator.createNewComposition(NewCompositionIngredients.builder()
+        var composition = compositionCreator.buildNewComposition(NewCompositionIngredients.builder()
                         .title(ingredients.getHash() + " " + AlphabetUtils.generateRandomName())
                         .rhythmPatterns(reconstructedRhythmPatterns)
                         .tunePatterns(reconstructedTunePatterns)
@@ -158,7 +149,6 @@ public class MigrationService {
         var form = compositionFormRepo.findByTitle(HOOK_FORM_KEY).orElseThrow();
         var existingPatterns = tunePatternRepo.findAllByFormAssociationId(form.getId());
         existingPatterns.stream().forEach(this::removeWhitespacesFromPatternBody);
-//        tunePatternRepo.saveAll(existingPatterns);
     }
 
     private void removeWhitespacesFromPatternBody(MelodyTunePattern pattern) {

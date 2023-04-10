@@ -1,7 +1,6 @@
 package cz.habanec.composer3;
 
-import cz.habanec.composer3.entities.Composition;
-import cz.habanec.composer3.entities.CompositionForm;
+import cz.habanec.composer3.enums.TunePatternEccentricity;
 import cz.habanec.composer3.repositories.CompositionFormRepo;
 import cz.habanec.composer3.repositories.CompositionRepo;
 import cz.habanec.composer3.repositories.MelodyMeasureRepo;
@@ -11,16 +10,8 @@ import cz.habanec.composer3.repositories.MelodyRhythmPatternRepo;
 import cz.habanec.composer3.repositories.MelodyTunePatternRepo;
 import cz.habanec.composer3.repositories.ModusRepo;
 import cz.habanec.composer3.repositories.QuintCircleKeyRepo;
-import cz.habanec.composer3.service.CompositionCreator;
+import cz.habanec.composer3.service.*;
 import cz.habanec.composer3.service.CompositionCreator.NewCompositionIngredients;
-import cz.habanec.composer3.service.CompositionService;
-import cz.habanec.composer3.service.MelodyCreator;
-import cz.habanec.composer3.service.MidiPlaybackService;
-import cz.habanec.composer3.service.MigrationService;
-import cz.habanec.composer3.service.RhythmPatternCreator;
-import cz.habanec.composer3.service.PatternService;
-import cz.habanec.composer3.service.TonalKeyService;
-import cz.habanec.composer3.service.TunePatternCreator;
 import cz.habanec.composer3.utils.AlphabetUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.CommandLineRunner;
@@ -29,12 +20,8 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.sql.DataSource;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Random;
-import java.util.stream.Stream;
+
+import static cz.habanec.composer3.utils.ProbabilityUtils.RANDOM;
 
 @SpringBootApplication
 @RequiredArgsConstructor
@@ -59,13 +46,14 @@ public class Composer3Application implements CommandLineRunner {
 	private final PatternService patternService;
 	private final RhythmPatternCreator rhythmPatternCreator;
 	private final TunePatternCreator tunePatternCreator;
+	private final CompositionFormService formService;
 
 
 	public static void main(String[] args) {
 		SpringApplication.run(Composer3Application.class, args);
 	}
-
-
+// todo chci trojdoby takt a zmeny taktu vedene v patternu podobne jako keyschema
+// todo chci mit moznost zobrazit, ktery pattern odpovida kteremu pismenu a rucne je zamenovat.
 	// todo accomp chci přidat na požádání, až bude melodie - chci aby reagovala na hustotu melodie,
 	//  spíš než na patternSchematech - ty jsou dementní, zvaž proč je nezrušit
 	// todo uvaha - kazdou novou formu je treba prve ulozit, pak ji lze vybrat pro tvorbu nove skladby.
@@ -77,6 +65,7 @@ public class Composer3Application implements CommandLineRunner {
 	//  - musí být možnost psát formu ručně, vybírat z hotových, generovat i opakovaně
 	//  - musí být možnost filtru povolených hodnot v rhythmPatternech
 	//  - chci umožnit artikulační schéma : staccato, legato, rozličné obloučky, nátryl, trylek
+	//
 	// todo exception framework - rovnou s FE
 	// done uklada se mi znovu a znovu Cdur, Hdur do tonal_keys
 	// done nevyzkousel jsem distribuci vice klicu do taktu - je potreba vytvorit novy opus
@@ -104,69 +93,76 @@ public class Composer3Application implements CommandLineRunner {
 //				.build();
 //		compositionFormRepo.save(newForm);
 
-	newFromRandom();
+		newFromRandom("CL-runner");
 
 	}
 
 
-	public void newFromRandom() {
+	public void newFromRandom(String formTitle) {
 		final int[] RHYTHM_GRANULARITY_OPTIONS = {8, 4, 2};
 		final int[] TUNE_REPETITION_DENSITY_OPTIONS = {20, 40, 70};
-		final TunePatternCreator.Eccentricity[] TUNE_ECCENTRICITY_OPTIONS = {
-				TunePatternCreator.Eccentricity.NO_ECCENTRICITY,
-				TunePatternCreator.Eccentricity.MID_ECCENTRICITY,
-				TunePatternCreator.Eccentricity.HIGH_ECCENTRICITY
+		int[] repetitionDensityOptions = {
+				RANDOM.nextInt(101),
+				RANDOM.nextInt(101),
+				RANDOM.nextInt(101),
+		};
+		final TunePatternEccentricity[] TUNE_ECCENTRICITY_OPTIONS = {
+				TunePatternEccentricity.NO_ECCENTRICITY,
+				TunePatternEccentricity.MID_ECCENTRICITY,
+				TunePatternEccentricity.HIGH_ECCENTRICITY
+		};
+		final boolean[] rhythmEccentricOptions = {false, false, false};
+		final int[] valueCountOptions = {
+				RANDOM.nextInt(1, 16 + 1),
+				RANDOM.nextInt(1, 16 + 1),
+				RANDOM.nextInt(1, 16 + 1)
 		};
 
-		var form = compositionFormRepo.findByTitle("CL-runner").orElseThrow();
-		var keyAmajor = tonalKeyService.getTonalKeyByLabels("A", "MAJOR");
+		var form = formService.getFormByTitle(formTitle);
+		var mainKey = tonalKeyService.getTonalKeyByLabels("A", "MAJOR");
 
-		var rnd = new Random();
-		List<String> rhythmPatternsRaw = new ArrayList<>();
-		for (int option : RHYTHM_GRANULARITY_OPTIONS) {
-			var newPattern = rhythmPatternCreator.createRandomRhythmPatternByCutting(
-					4, rnd.nextInt(1, 17), option);
-			if (checkUniqueness(newPattern, rhythmPatternsRaw)) {
-				rhythmPatternsRaw.add(newPattern);
-			}
-		}
-		List<String> tunePatternsRaw = new ArrayList<>();
-		for (TunePatternCreator.Eccentricity e : TUNE_ECCENTRICITY_OPTIONS) {
-			var newPattern = tunePatternCreator.createTunePattern(
-					rnd.nextInt(2, 9), rnd.nextInt(2, 9), e);
-			if (checkUniqueness(newPattern, tunePatternsRaw)) {
-				tunePatternsRaw.add(newPattern);
-			}
-		}
+		var rhythmPatterns = rhythmPatternCreator.createRhythmPatterns(
+				RhythmPatternCreator.RhythmPatternSetIngredients.builder()
+						.formId(form.getId())
+						.beatCount(4)
+						.eccentricOptions(rhythmEccentricOptions)
+						.granularityOptions(RHYTHM_GRANULARITY_OPTIONS)
+						.valueCountOptions(valueCountOptions)
+						.build());
 
-//		var rhythmPatternsRaw = List.of("4,2,2,1,1,2,4", "1,1,2,4,8", "2,2,2,2,3,1,3,1"); // toto je fajn, bo z FE budou chodit takoveto stringy
-		var rhythmPatterns = rhythmPatternsRaw.stream()
-				.map(string -> patternService.getOrCreateMelodyRhythmPattern(string, form.getId()))
-				.toList();
+		int[] tunePatternAmbitusOptions = {
+				RANDOM.nextInt(2, 9),
+				RANDOM.nextInt(2, 9),
+				RANDOM.nextInt(2, 9)
+		};
+		int[] tunePatternToneAmountOptions = {
+				RANDOM.nextInt(2, 9),
+				RANDOM.nextInt(2, 9),
+				RANDOM.nextInt(2, 9)
+		};
 
-//		var tunePatternsRaw = List.of("0,1,2,3,4,5,1,2,0", "0,-1,-2,-3,-5,1,0,-1,-2", "0,4,0,4,3,1,1,3,5");
-		var tunePatterns = tunePatternsRaw.stream()
-				.map(string -> patternService.getOrCreateMelodyTunePattern(string, form.getId()))
-				.toList();
+		var tunePatterns = tunePatternCreator.createTunePatternSet(TunePatternCreator.TunePatternSetIngredients.builder()
+				.formId(form.getId())
+				.eccentricityOptions(TUNE_ECCENTRICITY_OPTIONS)
+				.ambitusOptions(tunePatternAmbitusOptions)
+				.toneAmountOptions(tunePatternToneAmountOptions)
+				.build());
 
-		var repetitionPatterns = rhythmPatterns.stream()
-				.map(pattern -> tunePatternCreator.createRepetitionPattern(
-						pattern.getValues().size(),
-						rnd.nextInt(101)))
-				.toList();
+
+		var repetitionPatterns = tunePatternCreator.createRepetitionPatternSet(rhythmPatterns, repetitionDensityOptions);
 
 		var title = AlphabetUtils.generateRandomName();
-		var tempo = 100;
+		var tempo = RANDOM.nextInt(60, 260);
 
-		var composition = compositionCreator.createNewComposition(NewCompositionIngredients.builder()
+		compositionService.setCurrentComposition(compositionCreator.buildNewComposition(NewCompositionIngredients.builder()
 				.rhythmPatterns(rhythmPatterns)
 				.tunePatterns(tunePatterns)
 				.repetitionPatterns(repetitionPatterns)
-				.mainKey(keyAmajor)
+				.mainKey(mainKey)
 				.form(form)
 				.title(title)
 				.tempo(tempo)
-				.build());
+				.build()));
 	}
 
 //		var composition = migrationService.migrateOldCompositionFrom(
@@ -203,9 +199,4 @@ public class Composer3Application implements CommandLineRunner {
 
 		migrationService.removeWhitespacesFromAllHookPatterns();
 	}
-
-	private boolean checkUniqueness(String newPattern, List<String> rhythmPatterns) {
-		return rhythmPatterns.stream().noneMatch(newPattern::equals);
-	}
-
 }

@@ -35,6 +35,8 @@ public class PatternService {
 
     }
 
+
+
     public <T extends Pattern> List<T> getRequiredPatternListUsingShuffledIndexes(
             List<Integer> shuffledIndexes, List<T> patterns) {
 

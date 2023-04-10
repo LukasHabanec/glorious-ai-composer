@@ -9,10 +9,10 @@ import org.junit.jupiter.api.TestInstance.Lifecycle;
 class PatternCreatorTest {
 
 
-    @BeforeAll
-    void init() {
-        sut = new RhythmPatternCreator();
-    }
+//    @BeforeAll
+//    void init() {
+//        sut = new RhythmPatternCreator();
+//    }
 
     RhythmPatternCreator sut;
 

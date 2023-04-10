@@ -1,9 +1,11 @@
 package cz.habanec.composer3.service;
 
+import cz.habanec.composer3.entities.assets.MelodyRhythmPattern;
+import cz.habanec.composer3.entities.assets.MelodyTunePattern;
+import cz.habanec.composer3.enums.TunePatternEccentricity;
 import cz.habanec.composer3.utils.PatternStringUtils;
 import cz.habanec.composer3.utils.ProbabilityUtils;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
+import lombok.Builder;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -14,6 +16,8 @@ import java.util.Random;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import static cz.habanec.composer3.utils.PatternStringUtils.isPatternNotUnique;
+import static cz.habanec.composer3.utils.ProbabilityUtils.RANDOM;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
 
@@ -25,7 +29,27 @@ public class TunePatternCreator {
     private static final int STEP_RESOLVING_DEFAULT_UPPER_LIMIT = 12;
     private static final int STEP_RESOLVING_DEFAULT_LOWER_LIMIT = 7;
 
-    private static final Random RANDOM = new Random();
+    private final PatternService patternService;
+
+    public List<MelodyTunePattern> createTunePatternSet(TunePatternSetIngredients ingredients) {
+        List<String> tunePatternsRaw = new ArrayList<>();
+        String newPattern;
+        for (int i = 0; i < ingredients.ambitusOptions.length; i++) {
+            do {
+                newPattern = createOneTunePattern(
+                        ingredients.ambitusOptions[i],
+                        ingredients.toneAmountOptions[i],
+                        ingredients.eccentricityOptions[i]);
+            }
+            while (isPatternNotUnique(newPattern, tunePatternsRaw));
+
+            tunePatternsRaw.add(newPattern);
+        }
+        return tunePatternsRaw.stream()
+                .map(string -> patternService.getOrCreateMelodyTunePattern(string, ingredients.formId))
+                .toList();
+
+    }
 
     /**
      * excentricity: skoky/kroky - dava smysl pro vetsi ambitus a toneAmount, jinak ma nejnizsi prioritu
@@ -36,7 +60,7 @@ public class TunePatternCreator {
      * vetsi skoky, ale nezajistuje je
      * excentricity bude mit asi 3 stupne a podle nej budu volit metodu tvorby - vic nebo min skakavou
      */
-    public String createTunePattern(int ambitus, int toneAmount, Eccentricity eccentricity) {
+    private String createOneTunePattern(int ambitus, int toneAmount, TunePatternEccentricity eccentricity) {
         //
         ambitus = max(ambitus, 2);
         toneAmount = max(toneAmount, 2);
@@ -46,19 +70,19 @@ public class TunePatternCreator {
         System.out.println(eligibleValues);
 
         List<Integer> pattern;
-        if (Eccentricity.HIGH_ECCENTRICITY.equals(eccentricity)) {
+        if (TunePatternEccentricity.HIGH_ECCENTRICITY.equals(eccentricity)) {
             pattern = generateRandomPatternUsingMbiraMethod(eligibleValues);
         } else {
             pattern = generateRandomPatternUsingStepMethod(eligibleValues, eccentricity);
         }
 
         System.out.println(pattern);
-        pattern = correctPatternToBeStartingWithZero(pattern);
+        pattern = sanitizePatternToBeStartingWithZero(pattern);
 
         return PatternStringUtils.stringyfyPattern(pattern);
     }
 
-    private List<Integer> correctPatternToBeStartingWithZero(List<Integer> pattern) {
+    private List<Integer> sanitizePatternToBeStartingWithZero(List<Integer> pattern) {
         if (pattern.isEmpty()) {
             return pattern;
         }
@@ -107,7 +131,7 @@ public class TunePatternCreator {
     ;
 
     private List<Integer> generateRandomPatternUsingStepMethod(List<Integer> eligibleValues,
-                                                               Eccentricity eccentricity) {
+                                                               TunePatternEccentricity eccentricity) {
         List<Integer> pattern = new ArrayList<>();
         int eligibleValuesSize = eligibleValues.size();
 
@@ -118,10 +142,10 @@ public class TunePatternCreator {
             pattern.clear();
             for (int i = 0; i < TUNE_PATTERN_DEFAULT_SIZE; i++) {
 
-                System.out.println();
-                System.out.println("Starting: i = " + i);
-                System.out.println(
-                        "newToneIndex = " + newToneIndex + ", upwards = " + upwards + ", nextStep = " + nextStep);
+//                System.out.println();
+//                System.out.println("Starting: i = " + i);
+//                System.out.println(
+//                        "newToneIndex = " + newToneIndex + ", upwards = " + upwards + ", nextStep = " + nextStep);
                 newToneIndex += nextStep;
                 if (newToneIndex >= eligibleValuesSize - 1) {
                     newToneIndex = eligibleValuesSize - 1;
@@ -140,7 +164,7 @@ public class TunePatternCreator {
 
             }
             if (new HashSet<>(pattern).containsAll(eligibleValues)) {
-                System.out.println("Success at " + attempt + ". attempt");
+//                System.out.println("Success at " + attempt + ". attempt");
                 break;
             }
         }
@@ -157,8 +181,16 @@ public class TunePatternCreator {
         } else if (threeDiceRoll < lowerLimit) {
             step = lowerLimit - threeDiceRoll;
         }
-        System.out.println("For roll " + threeDiceRoll + " step: " + step);
+//        System.out.println("For roll " + threeDiceRoll + " step: " + step);
         return step;
+    }
+
+    public List<String> createRepetitionPatternSet(List<MelodyRhythmPattern> rhythmPatterns, int[] densityOptions) {
+        return Stream.iterate(0, n -> ++n).limit(rhythmPatterns.size())
+                .map(index -> createOneRepetitionPattern(
+                        rhythmPatterns.get(index).getValues().size(),
+                        densityOptions[index]))
+                .collect(Collectors.toList());
     }
 
 
@@ -170,7 +202,7 @@ public class TunePatternCreator {
      * ale s přebytečnými iteracemi...(navýšit) raději rnd(100) < density / 2 ? anebo bych radeji mel resit pocet
      * zbyvajicich iteraci - oboji
      */
-    public String createRepetitionPattern(int valuesCount, int density) {
+    private String createOneRepetitionPattern(int valuesCount, int density) {
         if (density == 0) {
             return "";
         } else if (density == 100) {
@@ -223,10 +255,11 @@ public class TunePatternCreator {
         }
     }
 
-    @Getter
-    @AllArgsConstructor
-    public enum Eccentricity {
-        NO_ECCENTRICITY(0), LOW_ECCENTRICITY(1), MID_ECCENTRICITY(2), HIGH_ECCENTRICITY(3);
-        private final int value;
+    @Builder
+    public static class TunePatternSetIngredients {
+        private int[] ambitusOptions;
+        private int[] toneAmountOptions;
+        private TunePatternEccentricity[] eccentricityOptions;
+        private long formId;
     }
 }
