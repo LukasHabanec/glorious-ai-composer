@@ -2,7 +2,7 @@ package cz.habanec.composer3.service;
 
 import cz.habanec.composer3.entities.assets.MelodyRhythmPattern;
 import cz.habanec.composer3.entities.assets.MelodyTunePattern;
-import cz.habanec.composer3.enums.TunePatternEccentricity;
+import cz.habanec.composer3.entities.enums.TunePatternEccentricity;
 import cz.habanec.composer3.utils.PatternStringUtils;
 import cz.habanec.composer3.utils.ProbabilityUtils;
 import lombok.Builder;
@@ -76,8 +76,8 @@ public class TunePatternCreator {
             pattern = generateRandomPatternUsingStepMethod(eligibleValues, eccentricity);
         }
 
-        System.out.println(pattern);
         pattern = sanitizePatternToBeStartingWithZero(pattern);
+        System.out.println(pattern);
 
         return PatternStringUtils.stringyfyPattern(pattern);
     }
@@ -211,14 +211,12 @@ public class TunePatternCreator {
         List<Integer> repetitions = Stream.generate(() -> 1).limit(valuesCount).collect(Collectors.toList());
         var rnd = new Random();
         int amount;
-        int rndIndexToSquash;
         for (int remains = valuesCount; remains > 1; remains--) {
             amount = min(remains, evaluateRepetitions(rnd.nextInt(101), density, valuesCount));
             if (amount == 1) {
                 continue;
             }
-            rndIndexToSquash = rnd.nextInt(repetitions.size() - amount + 1);
-            squashMultipleValues(repetitions, rndIndexToSquash, amount);
+            squashMultipleValues(repetitions, amount);
             remains -= --amount;
         }
         System.out.printf("TunePatternCreator::createRepetitionPattern: for %d values in density of %d created %s%n",
@@ -246,7 +244,8 @@ public class TunePatternCreator {
         return amount;
     }
 
-    private void squashMultipleValues(List<Integer> list, int rndIndex, int amount) {
+    private void squashMultipleValues(List<Integer> list, int amount) {
+        int rndIndex = RANDOM.nextInt(list.size() - amount + 1);
         int squashedValue;
         for (int i = 1; i < amount; i++) {
             squashedValue = list.get(rndIndex) + list.get(rndIndex + 1);

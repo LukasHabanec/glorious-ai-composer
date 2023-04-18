@@ -32,12 +32,15 @@ public class TonalKey {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id", nullable = false)
     private Long id;
+
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "quint_circle_key_id")
     private QuintCircleKey quintCircleKey;
+
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "modus_id")
     private Modus modus;
+
     @Transient
     private KeyMidiValues keyMidiValues;
 

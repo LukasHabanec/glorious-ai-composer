@@ -6,6 +6,7 @@ import cz.habanec.composer3.entities.MidiSettings;
 import cz.habanec.composer3.entities.TonalKey;
 import cz.habanec.composer3.entities.assets.MelodyRhythmPattern;
 import cz.habanec.composer3.entities.assets.MelodyTunePattern;
+import cz.habanec.composer3.utils.Properties;
 import lombok.Builder;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
@@ -23,13 +24,6 @@ public class CompositionCreator {
     private final MelodyCreator melodyCreator;
     private final CompositionService compositionService;
 
-
-    @Value("${midi.resolution}")
-    private Integer DEFAULT_MIDI_RESOLUTION;
-
-
-
-
     @Transactional
     public Composition buildNewComposition(NewCompositionIngredients ingredients) {
 
@@ -43,7 +37,7 @@ public class CompositionCreator {
                 .tempo(ingredients.getTempo())
                 .build();
         composition.setMidiSettings(MidiSettings.builder()
-                .resolution(DEFAULT_MIDI_RESOLUTION)
+                .resolution(Properties.DEFAULT_MIDI_RESOLUTION)
                 .melodyOn(true)
                 .accompanimentOn(false)
                 .composition(composition)
@@ -54,7 +48,6 @@ public class CompositionCreator {
                 ingredients.getRepetitionPatterns(),
                 composition));
 
-        compositionService.setCurrentComposition(composition);
         return composition;
     }
 

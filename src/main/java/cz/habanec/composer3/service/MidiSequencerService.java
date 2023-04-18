@@ -1,7 +1,11 @@
 package cz.habanec.composer3.service;
 
 import cz.habanec.composer3.entities.Composition;
-import org.springframework.stereotype.Service;
+import cz.habanec.composer3.utils.Properties;
+import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Component;
 
 import javax.sound.midi.InvalidMidiDataException;
 import javax.sound.midi.MidiEvent;
@@ -19,11 +23,11 @@ import static javax.sound.midi.ShortMessage.NOTE_OFF;
 import static javax.sound.midi.ShortMessage.NOTE_ON;
 import static javax.sound.midi.ShortMessage.PROGRAM_CHANGE;
 
-@Service
+@Component
 public class MidiSequencerService {
 
     private Sequencer sequencer;
-    private Sequence sonatina;
+    private Sequence sequence;
     private Track track;
     private int resolution;
     private int tickPerMeasure;
@@ -38,7 +42,7 @@ public class MidiSequencerService {
         if (isPlaying) {
             stop();
         }
-        resolution = 4; //az budu menit resolution, musim prekodovat i rhythmpatterns
+        resolution = Properties.DEFAULT_MIDI_RESOLUTION; //az budu menit resolution, musim prekodovat i rhythmpatterns
         tickPerMeasure = 4 * resolution;
 //        midiScriptor = new FragmentScriptor(resolution);
         sequencer = null;
@@ -55,8 +59,8 @@ public class MidiSequencerService {
                 }
             });*/
 
-            sonatina = new Sequence(Sequence.PPQ, resolution);
-            track = sonatina.createTrack();
+            sequence = new Sequence(Sequence.PPQ, resolution);
+            track = sequence.createTrack();
         } catch (MidiUnavailableException | InvalidMidiDataException e) {
             e.printStackTrace();
         }
@@ -128,7 +132,7 @@ public class MidiSequencerService {
             List<Integer> rhythmValues,
             List<Integer> tuneValues) {
 
-        int tick = measureNum * tickPerMeasure;
+        int tick = measureNum * tickPerMeasure; // todo tohle zrus, jakmile bude tickPerMeasure promenlivy
         int high;
         int volume = 100;
         int valuesSize = rhythmValues.size();
@@ -159,7 +163,7 @@ public class MidiSequencerService {
     public void play() {
         System.out.println("MidiSequencerService::play:");
         try {
-            sequencer.setSequence(sonatina);
+            sequencer.setSequence(sequence);
             isPlaying = true;
             sequencer.start();
         } catch (Exception ex) {
@@ -169,13 +173,13 @@ public class MidiSequencerService {
 
     public boolean record(Composition composition, String filename, String hash) {
         feedMidiSequence(composition, 0);
-        int[] allowedTypes = MidiSystem.getMidiFileTypes(sonatina);
+        int[] allowedTypes = MidiSystem.getMidiFileTypes(sequence);
         if (allowedTypes.length == 0) {
             System.err.println("No supported MIDI file types.");
             return false;
         } else {
             try {
-                MidiSystem.write(sonatina, allowedTypes[0], new File(filename + "-" + hash + ".mid"));
+                MidiSystem.write(sequence, allowedTypes[0], new File(filename + "-" + hash + ".mid"));
                 System.out.println("Successfully saved.");
                 return true;
             } catch (IOException e) {

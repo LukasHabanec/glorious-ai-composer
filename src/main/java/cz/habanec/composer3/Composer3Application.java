@@ -1,6 +1,7 @@
 package cz.habanec.composer3;
 
-import cz.habanec.composer3.enums.TunePatternEccentricity;
+import cz.habanec.composer3.entities.enums.NoteLength;
+import cz.habanec.composer3.entities.enums.TunePatternEccentricity;
 import cz.habanec.composer3.repositories.CompositionFormRepo;
 import cz.habanec.composer3.repositories.CompositionRepo;
 import cz.habanec.composer3.repositories.MelodyMeasureRepo;
@@ -20,6 +21,8 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.sql.DataSource;
+
+import java.util.Arrays;
 
 import static cz.habanec.composer3.utils.ProbabilityUtils.RANDOM;
 
@@ -93,13 +96,18 @@ public class Composer3Application implements CommandLineRunner {
 //				.build();
 //		compositionFormRepo.save(newForm);
 
+		Arrays.stream(NoteLength.values()).map(NoteLength::getMidiValue).forEach(System.out::println);
+
 		newFromRandom("CL-runner");
 
 	}
 
 
 	public void newFromRandom(String formTitle) {
-		final int[] RHYTHM_GRANULARITY_OPTIONS = {8, 4, 2};
+		final NoteLength[] RHYTHM_GRANULARITY_OPTIONS = {
+				NoteLength.HALF_NOTE,
+				NoteLength.QUARTER_NOTE,
+				NoteLength.EIGHT_NOTE};
 		final int[] TUNE_REPETITION_DENSITY_OPTIONS = {20, 40, 70};
 		int[] repetitionDensityOptions = {
 				RANDOM.nextInt(101),

@@ -1,9 +1,9 @@
 package cz.habanec.composer3.service;
 
 import cz.habanec.composer3.entities.assets.MelodyRhythmPattern;
+import cz.habanec.composer3.entities.enums.NoteLength;
 import lombok.Builder;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -15,6 +15,7 @@ import java.util.stream.Stream;
 import static cz.habanec.composer3.utils.PatternStringUtils.isPatternNotUnique;
 import static cz.habanec.composer3.utils.PatternStringUtils.stringyfyPattern;
 import static cz.habanec.composer3.utils.ProbabilityUtils.RANDOM;
+import static cz.habanec.composer3.utils.Properties.DEFAULT_MIDI_RESOLUTION;
 
 @Service
 @RequiredArgsConstructor
@@ -22,14 +23,12 @@ public class RhythmPatternCreator {
 
     private final PatternService patternService;
 
-    @Value("${midi.resolution}")
-    private final Integer DEFAULT_MIDI_RESOLUTION = 4;
     private final int MIN_RHYTHM_VALUE = 1;
 
     public List<MelodyRhythmPattern> createRhythmPatterns(RhythmPatternSetIngredients ingredients) {
 
         int beatCount = ingredients.beatCount;
-        int[] granularityOptions = ingredients.granularityOptions;
+        var granularityOptions = ingredients.granularityOptions;
         final int MAX_RHYTHM_VALUE = DEFAULT_MIDI_RESOLUTION * beatCount;
 
         List<String> rhythmPatternsRaw = new ArrayList<>();
@@ -39,9 +38,9 @@ public class RhythmPatternCreator {
             int valueCount = ingredients.valueCountOptions[i];
             do {
                 if (ingredients.eccentricOptions[i]) {
-                    newPattern = createRandomRhythmPatternBySquashing(beatCount, valueCount, granularityOptions[i]);
+                    newPattern = createRandomRhythmPatternBySquashing(beatCount, valueCount, granularityOptions[i].getMidiValue());
                 } else {
-                    newPattern = createRandomRhythmPatternByCutting(beatCount, valueCount, granularityOptions[i]);
+                    newPattern = createRandomRhythmPatternByCutting(beatCount, valueCount, granularityOptions[i].getMidiValue());
                 }
             }
             while (isPatternNotUnique(newPattern, rhythmPatternsRaw));
@@ -163,7 +162,7 @@ public class RhythmPatternCreator {
 
     @Builder
     public static class RhythmPatternSetIngredients {
-        int[] granularityOptions;
+        NoteLength[] granularityOptions;
         int[] valueCountOptions;
         long formId;
         int beatCount;

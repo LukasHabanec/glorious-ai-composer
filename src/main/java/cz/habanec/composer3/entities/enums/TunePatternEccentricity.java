@@ -1,4 +1,4 @@
-package cz.habanec.composer3.enums;
+package cz.habanec.composer3.entities.enums;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -11,5 +11,4 @@ public enum TunePatternEccentricity {
     MID_ECCENTRICITY(2),
     HIGH_ECCENTRICITY(3);
     private final int value;
-
 }
