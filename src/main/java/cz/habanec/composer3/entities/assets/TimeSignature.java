@@ -2,16 +2,17 @@ package cz.habanec.composer3.entities.assets;
 
 import cz.habanec.composer3.entities.enums.NoteLength;
 import jakarta.persistence.*;
-import lombok.EqualsAndHashCode;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
-@Getter
+import java.util.Objects;
+
 @Entity
-@Table(name = "time_signatures", uniqueConstraints = {
-        @UniqueConstraint(columnNames = { "num_of_beats", "note_length" }) })
+@Getter
+@Builder
 @NoArgsConstructor
+@AllArgsConstructor
 @EqualsAndHashCode(of = {"id", "label"})
+@Table(name = "time_signatures")
 public class TimeSignature {
 
     @Id
@@ -23,7 +24,21 @@ public class TimeSignature {
     private Integer numOfBeats;
 
     @Enumerated(value = EnumType.STRING)
-    @Column(name = "note_length", nullable = false)
-    private NoteLength noteLength;
+    @Column(name = "beat", nullable = false)
+    private NoteLength beat;
+
+    @Column(name = "label", nullable = false, unique = true)
+    private String label;
+
+    @Transient
+    private Integer midiLength;
+
+    @Transient
+    public int getMidiLength() {
+        if (Objects.isNull(midiLength)) {
+            midiLength = beat.getMidiValue() * numOfBeats;
+        }
+        return midiLength;
+    }
 
 }

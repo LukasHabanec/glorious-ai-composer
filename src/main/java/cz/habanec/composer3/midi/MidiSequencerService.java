@@ -1,4 +1,4 @@
-package cz.habanec.composer3.service;
+package cz.habanec.composer3.midi;
 
 import cz.habanec.composer3.entities.Composition;
 import cz.habanec.composer3.utils.Properties;
@@ -42,8 +42,7 @@ public class MidiSequencerService {
         if (isPlaying) {
             stop();
         }
-        resolution = Properties.DEFAULT_MIDI_RESOLUTION; //az budu menit resolution, musim prekodovat i rhythmpatterns
-        tickPerMeasure = 4 * resolution;
+        resolution = Properties.DEFAULT_MIDI_RESOLUTION;
 //        midiScriptor = new FragmentScriptor(resolution);
         sequencer = null;
         try {
@@ -110,29 +109,33 @@ public class MidiSequencerService {
     private void populateMelodyByAddingMeasuresOntoTrack(Composition composition, int initialMeasure) {
         setInstrument(MELODY_CHANNEL, 0, 0);
 
+        var measureList = composition.getMelody().getMelodyMeasureList();
         int countOfMeasures = composition.getMelody().getMelodyMeasureList().size();
+        int tick = 0;
+
         for (int i = initialMeasure; i < countOfMeasures; i++) {
 
-            var measure = composition.getMelody().getMelodyMeasureList().get(i);
+            var measure = measureList.get(i);
 
             makeMelodyMeasureByAddingOntoTrack(
                     measure.getCurrentKey().getKeyMidiValues().getScale(),
-                    i - initialMeasure,
+                    tick,
                     measure.getFirstToneIndex() + measure.getUserSpecialShifter(),
                     measure.getRhythmPattern().getValues(),
                     measure.getRealTunePatternValues()
             );
+            tick += measure.getTimeSignature().getMidiLength();
         }
     }
 
     private void makeMelodyMeasureByAddingOntoTrack(
             List<Integer> keyValues,
-            int measureNum,
+            int initialTick,
             int initialToneIndex,
             List<Integer> rhythmValues,
             List<Integer> tuneValues) {
 
-        int tick = measureNum * tickPerMeasure; // todo tohle zrus, jakmile bude tickPerMeasure promenlivy
+        int tick = initialTick;
         int high;
         int volume = 100;
         int valuesSize = rhythmValues.size();
@@ -181,14 +184,14 @@ public class MidiSequencerService {
             try {
                 MidiSystem.write(sequence, allowedTypes[0], new File(filename + "-" + hash + ".mid"));
                 System.out.println("Successfully saved.");
-                return true;
             } catch (IOException e) {
                 e.printStackTrace();
                 System.out.println("No success saving midi file.");
                 return false;
             }
-            //System.exit(0);
+//            System.exit(0);
         }
+        return true;
     }
 
 

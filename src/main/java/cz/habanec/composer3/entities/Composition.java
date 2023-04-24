@@ -1,5 +1,6 @@
 package cz.habanec.composer3.entities;
 
+import cz.habanec.composer3.entities.assets.TimeSignature;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -45,6 +46,10 @@ public class Composition {
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "tonic_key_id", nullable = false)
     private TonalKey tonicKey;
+
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "time_signature_id", nullable = false)
+    private TimeSignature timeSignature;
 
     @Column
     private Integer tempo;

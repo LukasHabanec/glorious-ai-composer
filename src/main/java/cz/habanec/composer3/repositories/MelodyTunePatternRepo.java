@@ -1,7 +1,6 @@
 package cz.habanec.composer3.repositories;
 
-import cz.habanec.composer3.entities.assets.MelodyRhythmPattern;
-import cz.habanec.composer3.entities.assets.MelodyTunePattern;
+import cz.habanec.composer3.entities.MelodyTunePattern;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;
@@ -11,5 +10,5 @@ public interface MelodyTunePatternRepo extends JpaRepository<MelodyTunePattern, 
 
     List<MelodyTunePattern> findAllByFormAssociationId(Long id);
 
-    Optional<MelodyTunePattern> findByBodyAndFormAssociationId(String body, Long formId);
+    Optional<MelodyTunePattern> findByBody(String body);
 }

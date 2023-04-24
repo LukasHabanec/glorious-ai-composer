@@ -1,20 +1,17 @@
 package cz.habanec.composer3.controllers;
 
 import cz.habanec.composer3.service.CompositionService;
-import cz.habanec.composer3.service.MidiPlaybackService;
+import cz.habanec.composer3.midi.MidiPlaybackService;
 import cz.habanec.composer3.service.PostProductionService;
 import lombok.Getter;
-import lombok.NoArgsConstructor;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
-import lombok.Value;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestAttribute;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
@@ -107,6 +104,17 @@ public class ComposerController {
 
         att.addFlashAttribute("message", "Changes made.");
         return "redirect:/composer/composition/" + compositionId;
+    }
+
+    @GetMapping("/composition/export-midi")
+    public String exportMidi(RedirectAttributes att) {
+        var composition = compositionService.getCurrentComposition();
+        if (midiPlaybackService.exportMidi(composition)) {
+            att.addFlashAttribute("message", "Successfully saved.");
+        } else {
+            att.addFlashAttribute("message", "Error, not saved.");
+        }
+        return "redirect:/composer/composition/" + composition.getId();
     }
 
     @Getter

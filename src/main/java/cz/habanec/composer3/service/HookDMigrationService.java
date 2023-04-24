@@ -1,12 +1,13 @@
 package cz.habanec.composer3.service;
 
 import cz.habanec.composer3.entities.Composition;
-import cz.habanec.composer3.entities.assets.MelodyTunePattern;
+import cz.habanec.composer3.entities.CompositionForm;
 import cz.habanec.composer3.repositories.CompositionFormRepo;
 import cz.habanec.composer3.repositories.MelodyRhythmPatternRepo;
 import cz.habanec.composer3.repositories.MelodyTunePatternRepo;
-import cz.habanec.composer3.service.CompositionCreator.NewCompositionIngredients;
+import cz.habanec.composer3.service.CompositionBuilder.NewCompositionIngredients;
 import cz.habanec.composer3.utils.AlphabetUtils;
+import cz.habanec.composer3.utils.PatternStringUtils;
 import lombok.Builder;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
@@ -26,16 +27,12 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.Arrays;
 import java.util.List;
-import java.util.function.Predicate;
-import java.util.stream.Collectors;
 
-import static cz.habanec.composer3.utils.PatternStringUtils.WHITESPACE_REGEX_DELIMITER;
-import static cz.habanec.composer3.utils.PatternStringUtils.extractIntegerListFrom;
-import static cz.habanec.composer3.utils.PatternStringUtils.getUniqueSymbolsCount;
+import static cz.habanec.composer3.utils.PatternStringUtils.*;
 
 @Service
 @RequiredArgsConstructor
-public class MigrationService {
+public class HookDMigrationService {
 
     public static final String HOOK_FORM_KEY = "Hook D";
 
@@ -44,9 +41,9 @@ public class MigrationService {
     private final CompositionFormRepo compositionFormRepo;
     private final MelodyRhythmPatternRepo rhythmPatternRepo;
     private final MelodyTunePatternRepo tunePatternRepo;
-    private final CompositionService compositionService;
-    private final CompositionCreator compositionCreator;
+    private final CompositionBuilder compositionBuilder;
     private final PatternService patternService;
+    private final TimeSignatureService timeSignatureService;
 
     @Transactional //TODO figurations, exceptions
     public Composition migrateOldHookCompositionFrom(MigratingCompositionIngredients ingredients) {
@@ -58,6 +55,7 @@ public class MigrationService {
 
         var form = compositionFormRepo.findByTitle(ingredients.getFormName()).orElseThrow();
         var formId = form.getId();
+        var timeSignature = timeSignatureService.fetchOrCreateTimeSignature("4/4");
 
         int tunePatternsRequiredCount = getUniqueSymbolsCount(form.getMelodyTuneScheme());
         int rhythmPatternsRequiredCount = getUniqueSymbolsCount(form.getMelodyRhythmScheme());
@@ -75,18 +73,18 @@ public class MigrationService {
         var reconstructedTunePatterns = patternService.getRequiredPatternListUsingShuffledIndexes(
                 shuffledTuneIndexes, tunePatterns);
 
-        var composition = compositionCreator.buildNewComposition(NewCompositionIngredients.builder()
-                        .title(ingredients.getHash() + " " + AlphabetUtils.generateRandomName())
-                        .rhythmPatterns(reconstructedRhythmPatterns)
-                        .tunePatterns(reconstructedTunePatterns)
-                        .form(form)
-                        .mainKey(mainKey)
-                        .build());
+        var composition = compositionBuilder.buildNewComposition(NewCompositionIngredients.builder()
+                .title(ingredients.getHash() + " " + AlphabetUtils.generateRandomName())
+                .rhythmPatterns(reconstructedRhythmPatterns)
+                .tunePatterns(reconstructedTunePatterns)
+                .timeSignature(timeSignature)
+                .form(form)
+                .mainKey(mainKey)
+                .build());
 
         updateShifters(composition, ingredients.getShifters(), ingredients.getStartingGrade());
 
         return composition;
-
     }
 
     private void updateShifters(Composition composition, String shifters, int startingGrade) {
@@ -115,17 +113,70 @@ public class MigrationService {
             return null;
         }
         return migrateOldHookCompositionFrom(MigratingCompositionIngredients.builder()
-                        .hash(lines.get(8))
-                        .formName(HOOK_FORM_KEY)
-                        .shuffledRhythm(lines.get(3))
-                        .shuffledTune(lines.get(4))
-                        .figurations(lines.get(6))
-                        .shifters(lines.get(5))
-                        .mainKeyIndex(Integer.parseInt(lines.get(1).substring(2)))
-                        .modeIndex(Integer.parseInt(lines.get(1).substring(0, 1)))
-                        .startingGrade(Integer.parseInt(lines.get(2)))
-                        .tempo(Integer.parseInt(lines.get(7)))
-                        .build());
+                .hash(lines.get(8))
+                .formName(HOOK_FORM_KEY)
+                .shuffledRhythm(lines.get(3))
+                .shuffledTune(lines.get(4))
+                .figurations(lines.get(6))
+                .shifters(lines.get(5))
+                .mainKeyIndex(Integer.parseInt(lines.get(1).substring(2)))
+                .modeIndex(Integer.parseInt(lines.get(1).substring(0, 1)))
+                .startingGrade(Integer.parseInt(lines.get(2)))
+                .tempo(Integer.parseInt(lines.get(7)))
+                .build());
+    }
+
+    public void migrateAssets() {
+//		execSql("db/migration/migrate-modi.sql");
+//		execSql("db/migration/migrate-quint-circle.sql");
+        execSql("db/migration/migrate-patterns-english.sql");
+//		execSql("db/migration/migrate-form-english.sql");
+
+        var form = compositionFormRepo.findByTitle(HOOK_FORM_KEY).orElseThrow();
+
+        makeUpHookDMelodyTunePatterns(form);
+        makeUpHookDMelodyRhythmPatterns(form);
+    }
+
+    @Transactional
+    private void makeUpHookDMelodyRhythmPatterns(CompositionForm form) {
+        var existingPatterns = rhythmPatternRepo.findAllByFormAssociationId(form.getId());
+        var hookDtimeSignature = timeSignatureService.fetchOrCreateTimeSignature("4/4");
+
+        existingPatterns.stream()
+                .forEach(pattern -> {
+
+                    System.out.println(pattern);
+                    var values = convertResolutionFourToFourtyEight(pattern.getBody());
+                    System.out.println(values);
+                    pattern.setGranularity(PatternStringUtils.extractShortestNoteLength(values));
+                    pattern.setRndGenerated(false);
+                    pattern.setValuesCount(values.size());
+                    pattern.setTimeSignature(hookDtimeSignature);
+                    pattern.setBody(convertRhythmValuesToLabelsAndStringify(values));
+                    System.out.println(pattern + ", Granularity: " + pattern.getGranularity());
+                });
+    }
+
+    private List<Integer> convertResolutionFourToFourtyEight(String body) {
+        var values = PatternStringUtils.extractIntegerListFrom(body, COMMA_REGEX_DELIMITER);
+        return values.stream().map(value -> value * 12).toList();
+    }
+
+    @Transactional
+    private void makeUpHookDMelodyTunePatterns(CompositionForm form) {
+        tunePatternRepo.findAllByFormAssociationId(form.getId())
+                .forEach(pattern -> {
+
+                    System.out.println(pattern);
+                    var values = pattern.getValues();
+                    pattern.setToneAmount(PatternStringUtils.getUniqueValuesCount(values));
+                    pattern.setAmbitus(PatternStringUtils.getTunePatternsAmbitus(values));
+                    pattern.setBody(PatternStringUtils.joinIntListWithCommas(values));
+                    pattern.setRndCreated(false);
+                    System.out.println(pattern + " toneAmount: " + pattern.getToneAmount()
+                            + ", ambitus: " + pattern.getAmbitus());
+                });
     }
 
     public void execSql(String... sqlFile) {
@@ -142,22 +193,6 @@ public class MigrationService {
         } catch (SQLException e) {
             throw new RuntimeException("No connection acquired.");
         }
-    }
-
-    @Transactional
-    public void removeWhitespacesFromAllHookPatterns() {
-        var form = compositionFormRepo.findByTitle(HOOK_FORM_KEY).orElseThrow();
-        var existingPatterns = tunePatternRepo.findAllByFormAssociationId(form.getId());
-        existingPatterns.stream().forEach(this::removeWhitespacesFromPatternBody);
-    }
-
-    private void removeWhitespacesFromPatternBody(MelodyTunePattern pattern) {
-        System.out.println(pattern);
-        var sanitizedBody = pattern.getBody().chars()
-                .mapToObj(c -> (char) c)
-                .filter(Predicate.not(Character::isWhitespace)).map(String::valueOf).collect(Collectors.joining());
-        System.out.println(sanitizedBody);
-        pattern.setBody(sanitizedBody);
     }
 
     @Data

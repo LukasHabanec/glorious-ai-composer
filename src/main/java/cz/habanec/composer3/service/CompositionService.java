@@ -6,6 +6,7 @@ import cz.habanec.composer3.entities.dto.CompositionDto;
 import cz.habanec.composer3.entities.dto.CompositionDto.MelodyMeasureDto;
 import cz.habanec.composer3.repositories.CompositionRepo;
 import cz.habanec.composer3.repositories.MelodyRepo;
+import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import org.springframework.beans.factory.annotation.Value;
@@ -22,6 +23,7 @@ public class CompositionService {
 
     private final CompositionRepo compositionRepo;
     @Setter
+    @Getter
     private Composition currentComposition;
 
 

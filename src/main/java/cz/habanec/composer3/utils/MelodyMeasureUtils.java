@@ -1,6 +1,8 @@
 package cz.habanec.composer3.utils;
 
 import cz.habanec.composer3.entities.TonalKey;
+import cz.habanec.composer3.entities.assets.TimeSignature;
+import cz.habanec.composer3.entities.enums.NoteLength;
 import lombok.experimental.UtilityClass;
 
 import java.util.ArrayList;
@@ -10,29 +12,57 @@ import java.util.Map;
 @UtilityClass
 public class MelodyMeasureUtils {
 
+    public static final int VIEW_QUARTER_DIVIDER = Properties.DEFAULT_MIDI_RESOLUTION / 4;
+
     public static String extractMelodyPatternForView(
             Integer firstToneIndex,
             Integer userSpecialShifter,
             List<Integer> rhythmPattern,
-            List<Integer> tunePattern
+            List<Integer> tunePattern,
+            TimeSignature timeSignature
     ) {
+        final int MIN_VALUE_VISIBLE = NoteLength.SIXTEENTH_NOTE.getMidiValue();
+        int currentInvisibleValue = 0;
+        int currentInvisibleLength = 0;
         StringBuilder sb = new StringBuilder("[");
         for (int i = 0; i < rhythmPattern.size(); i++) {
-            sb.append(tunePattern.get(i) + firstToneIndex + userSpecialShifter);
-            sb.append("__".repeat(Math.max(0, rhythmPattern.get(i) - 1)));
+            int currentToneLength = rhythmPattern.get(i);
+            if (currentToneLength < MIN_VALUE_VISIBLE) {
+                currentInvisibleLength += currentToneLength;
+                if (currentInvisibleValue == 0) {
+                    currentInvisibleValue = tunePattern.get(i) + firstToneIndex + userSpecialShifter;
+                }
+            } else {
+                if (currentInvisibleLength > 0) {
+                    sb.append(currentInvisibleValue).append("*").append("***".repeat(Math.max(0, (currentInvisibleLength / MIN_VALUE_VISIBLE - 1))));
+                    currentInvisibleValue = 0;
+                    currentInvisibleLength = 0;
+                }
+                sb.append(tunePattern.get(i) + firstToneIndex + userSpecialShifter);
+                sb.append("_").append("___".repeat(Math.max(0, (currentToneLength - MIN_VALUE_VISIBLE) / VIEW_QUARTER_DIVIDER)));
+            }
+        }
+        if (currentInvisibleLength > 0) {
+            sb.append(currentInvisibleValue).append("*").append("***".repeat(Math.max(0, (currentInvisibleLength / MIN_VALUE_VISIBLE))));
+        }
+        int beatBarOffset = 0;
+        for (int i = 0; i < timeSignature.getNumOfBeats() - 1; i++) {
+            beatBarOffset += timeSignature.getBeat().getMidiValue() / 4 + 1;
+            sb.insert(beatBarOffset, "|");
         }
         sb.append("]");
         return sb.toString();
     }
 
     public static int[] extractMelodyMatrix(
-            Integer size, // todo composition.getMidiSettings().getResolution() * numOfBeats
-            Integer firstToneIndex,
-            Integer userSpecialShifter,
+            int midiLenght,
+            int firstToneIndex,
+            int userSpecialShifter,
             List<Integer> rhythmPattern,
             List<Integer> tunePattern,
-            TonalKey currentKey) {
-        var melodyMatrix = new int[size];
+            TonalKey currentKey
+    ) {
+        var melodyMatrix = new int[midiLenght];
         int index = 0;
         for (int i = 0; i < rhythmPattern.size(); i++) {
             for (int j = 0; j < rhythmPattern.get(i); j++) {

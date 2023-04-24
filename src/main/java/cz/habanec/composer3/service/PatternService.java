@@ -1,7 +1,7 @@
 package cz.habanec.composer3.service;
 
-import cz.habanec.composer3.entities.assets.MelodyRhythmPattern;
-import cz.habanec.composer3.entities.assets.MelodyTunePattern;
+import cz.habanec.composer3.entities.MelodyRhythmPattern;
+import cz.habanec.composer3.entities.MelodyTunePattern;
 import cz.habanec.composer3.entities.assets.Pattern;
 import cz.habanec.composer3.repositories.MelodyRhythmPatternRepo;
 import cz.habanec.composer3.repositories.MelodyTunePatternRepo;
@@ -22,16 +22,16 @@ public class PatternService {
 
 
     @Transactional
-    public MelodyRhythmPattern getOrCreateMelodyRhythmPattern(String body, Long formAssociationId) {
-        return rhythmPatternRepo.findByBodyAndFormAssociationId(body, formAssociationId)
-                .orElseGet(() -> new MelodyRhythmPattern(body, formAssociationId));
+    public MelodyRhythmPattern fetchOrReturnMelodyRhythmPattern(MelodyRhythmPattern pattern) {
+        return rhythmPatternRepo.findByBody(pattern.getBody())
+                .orElse(pattern);
 
     }
 
     @Transactional
-    public MelodyTunePattern getOrCreateMelodyTunePattern(String body, Long formAssociationId) {
-        return tunePatternRepo.findByBodyAndFormAssociationId(body, formAssociationId)
-                .orElseGet(() -> new MelodyTunePattern(body, formAssociationId));
+    public MelodyTunePattern fetchOrReturnMelodyTunePattern(MelodyTunePattern pattern) {
+        return tunePatternRepo.findByBody(pattern.getBody())
+                .orElse(pattern);
 
     }
 

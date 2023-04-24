@@ -1,7 +1,11 @@
-package cz.habanec.composer3.service;
+package cz.habanec.composer3.creators;
 
-import cz.habanec.composer3.entities.assets.MelodyRhythmPattern;
+import cz.habanec.composer3.entities.MelodyRhythmPattern;
+import cz.habanec.composer3.entities.assets.TimeSignature;
 import cz.habanec.composer3.entities.enums.NoteLength;
+import cz.habanec.composer3.service.NoteLengthHelper;
+import cz.habanec.composer3.service.PatternService;
+import cz.habanec.composer3.utils.PatternStringUtils;
 import lombok.Builder;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -12,10 +16,8 @@ import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import static cz.habanec.composer3.utils.PatternStringUtils.isPatternNotUnique;
-import static cz.habanec.composer3.utils.PatternStringUtils.stringyfyPattern;
+import static cz.habanec.composer3.utils.PatternStringUtils.*;
 import static cz.habanec.composer3.utils.ProbabilityUtils.RANDOM;
-import static cz.habanec.composer3.utils.Properties.DEFAULT_MIDI_RESOLUTION;
 
 @Service
 @RequiredArgsConstructor
@@ -23,24 +25,23 @@ public class RhythmPatternCreator {
 
     private final PatternService patternService;
 
-    private final int MIN_RHYTHM_VALUE = 1;
+    public List<MelodyRhythmPattern> createRhythmPatternsSet(RhythmPatternSetIngredients ingredients) {
 
-    public List<MelodyRhythmPattern> createRhythmPatterns(RhythmPatternSetIngredients ingredients) {
-
-        int beatCount = ingredients.beatCount;
+        var valuesCountOptions = ingredients.valueCountOptions;
+        var timeSignature = ingredients.timeSignature;
         var granularityOptions = ingredients.granularityOptions;
-        final int MAX_RHYTHM_VALUE = DEFAULT_MIDI_RESOLUTION * beatCount;
 
-        List<String> rhythmPatternsRaw = new ArrayList<>();
-        String newPattern;
+        List<List<Integer>> rhythmPatternsRaw = new ArrayList<>();
+        List<Integer> newPattern;
         for (int i = 0; i < granularityOptions.length; i++) {
 
-            int valueCount = ingredients.valueCountOptions[i];
             do {
                 if (ingredients.eccentricOptions[i]) {
-                    newPattern = createRandomRhythmPatternBySquashing(beatCount, valueCount, granularityOptions[i].getMidiValue());
+                    newPattern = createRandomRhythmPatternBodyBySquashing(
+                            timeSignature.getMidiLength(), valuesCountOptions[i], granularityOptions[i].getMidiValue());
                 } else {
-                    newPattern = createRandomRhythmPatternByCutting(beatCount, valueCount, granularityOptions[i].getMidiValue());
+                    newPattern = createRandomRhythmPatternBodyByCutting(
+                            timeSignature.getMidiLength(), valuesCountOptions[i], granularityOptions[i].getMidiValue());
                 }
             }
             while (isPatternNotUnique(newPattern, rhythmPatternsRaw));
@@ -48,22 +49,27 @@ public class RhythmPatternCreator {
             rhythmPatternsRaw.add(newPattern);
         }
 
-        return rhythmPatternsRaw.stream()
-                .map(pattern -> patternService.getOrCreateMelodyRhythmPattern(pattern, ingredients.formId))
+        return Stream.iterate(0, n -> ++n).limit(rhythmPatternsRaw.size())
+                .map(index -> {
+                    var pattern = rhythmPatternsRaw.get(index);
+                    return patternService.fetchOrReturnMelodyRhythmPattern(MelodyRhythmPattern.builder()
+                            .body(convertRhythmValuesToLabelsAndStringify(pattern))
+                            .rndGenerated(true)
+                            .timeSignature(timeSignature)
+                            .granularity(PatternStringUtils.extractShortestNoteLength(pattern))
+                            .valuesCount(pattern.size())
+                            .formAssociationId(ingredients.formId)
+                            .build());
+                })
                 .toList();
     }
 
-    public String createRandomRhythmPatternByCutting(final int beatCount, int valueCount, int granularity) {
-        int length = DEFAULT_MIDI_RESOLUTION * beatCount;
+    public List<Integer> createRandomRhythmPatternBodyByCutting(final int length, int valueCount, int granularity) {
 
         if (valueCount == 0) {
-            return List.of(-length).toString();
+            return List.of(-length);
         }
-        if (valueCount > length) {
-            System.out.printf("PatternCreator::createRandomRhythmPatternByCutting: "
-                    + "Value count corrected from %d to %d%n", valueCount, length);
-            valueCount = length;
-        }
+        valueCount = Math.min(length, valueCount);
 
         List<Integer> list = new ArrayList<>(List.of(length));
         int valueToCutRandomIndex;
@@ -80,7 +86,7 @@ public class RhythmPatternCreator {
 
             valueToCutRandomIndex = RANDOM.nextInt(list.size());
             valueToCut = list.get(valueToCutRandomIndex);
-            if (valueToCut == MIN_RHYTHM_VALUE || valueToCut < granularity) {
+            if (valueToCut == NoteLengthHelper.MIN_RHYTHM_VALUE || valueToCut < granularity) {
                 continue;
             }
 
@@ -94,7 +100,7 @@ public class RhythmPatternCreator {
         }
 
         System.out.printf("PatternCreator::createRandomRhythmPatternByCutting: %s%n", list);
-        return stringyfyPattern(list);
+        return list;
     }
 
     private List<Integer> getOptionsForCutting(int valueToCut, int granularity) {
@@ -116,11 +122,10 @@ public class RhythmPatternCreator {
         return list.stream().noneMatch(value -> value > granularity);
     }
 
-    public String createRandomRhythmPatternBySquashing(final int beatCount, int valueCount, int granularity) {
-        int length = DEFAULT_MIDI_RESOLUTION * beatCount;
+    public List<Integer> createRandomRhythmPatternBodyBySquashing(final int length, int valueCount, int granularity) {
 
         if (valueCount == 0) {
-            return List.of(- length).toString();
+            return List.of(-length);
         }
         if (valueCount > length) {
             System.out.printf("PatternCreator::createRandomRhythmPatternBySquashing: "
@@ -138,7 +143,7 @@ public class RhythmPatternCreator {
             squashRandomValues(list);
         }
         System.out.printf("PatternCreator::createRandomRhythmPatternBySquashing: %s%n", list);
-        return stringyfyPattern(list);
+        return list;
     }
 
     private void squashRandomValues(List<Integer> list) {
@@ -165,7 +170,7 @@ public class RhythmPatternCreator {
         NoteLength[] granularityOptions;
         int[] valueCountOptions;
         long formId;
-        int beatCount;
+        TimeSignature timeSignature;
         boolean[] eccentricOptions;
     }
 }

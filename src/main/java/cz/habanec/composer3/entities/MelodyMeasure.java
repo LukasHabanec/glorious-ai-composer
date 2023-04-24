@@ -1,7 +1,6 @@
 package cz.habanec.composer3.entities;
 
-import cz.habanec.composer3.entities.assets.MelodyRhythmPattern;
-import cz.habanec.composer3.entities.assets.MelodyTunePattern;
+import cz.habanec.composer3.entities.assets.TimeSignature;
 import cz.habanec.composer3.utils.MelodyMeasureUtils;
 import cz.habanec.composer3.utils.PatternStringUtils;
 import jakarta.persistence.CascadeType;
@@ -50,8 +49,9 @@ public class MelodyMeasure {
     @Column
     private Integer measureIndex;
 
-    @Column
-    private Integer numOfBeats;
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "time_signature_id")
+    private TimeSignature timeSignature;
 
     @ManyToOne(fetch = FetchType.EAGER, cascade = CascadeType.ALL)
     @JoinColumn(name = "rhythm_pattern_id")
@@ -89,7 +89,7 @@ public class MelodyMeasure {
             realTunePatternValues = MelodyMeasureUtils.extractRealTunePattern(
                     tunePattern.getValues(),
                     PatternStringUtils.extractSchemaMap(repetitionSchema),
-                    rhythmPattern.getValues().size()
+                    rhythmPattern.getValuesCount()
             );
         }
         return realTunePatternValues;
@@ -99,8 +99,13 @@ public class MelodyMeasure {
     public int[] getMelodyMatrix() {
         if (Objects.isNull(melodyMatrix)) {
             melodyMatrix = extractMelodyMatrix(
-                    16, firstToneIndex, userSpecialShifter, rhythmPattern.getValues(), getRealTunePatternValues(), currentKey
-            ); //todo 16 HARD!!! var size = CompositionService.MIDI_RESOLUTION * numOfBeats;
+                    timeSignature.getMidiLength(),
+                    firstToneIndex,
+                    userSpecialShifter,
+                    rhythmPattern.getValues(),
+                    getRealTunePatternValues(),
+                    currentKey
+            );
         }
         return melodyMatrix;
     }
@@ -109,7 +114,11 @@ public class MelodyMeasure {
     public String getMelodyPatternForView() {
         if (Objects.isNull(melodyPatternForView)) {
             melodyPatternForView = extractMelodyPatternForView(
-                    firstToneIndex, userSpecialShifter, rhythmPattern.getValues(), getRealTunePatternValues()
+                    firstToneIndex,
+                    userSpecialShifter,
+                    rhythmPattern.getValues(),
+                    getRealTunePatternValues(),
+                    timeSignature
             );
         }
         return melodyPatternForView;

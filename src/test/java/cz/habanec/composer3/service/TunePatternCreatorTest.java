@@ -1,5 +1,6 @@
 package cz.habanec.composer3.service;
 
+import cz.habanec.composer3.creators.TunePatternCreator;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;

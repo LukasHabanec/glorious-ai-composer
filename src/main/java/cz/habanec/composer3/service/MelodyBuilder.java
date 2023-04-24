@@ -4,8 +4,9 @@ import cz.habanec.composer3.entities.Composition;
 import cz.habanec.composer3.entities.Melody;
 import cz.habanec.composer3.entities.MelodyMeasure;
 import cz.habanec.composer3.entities.TonalKey;
-import cz.habanec.composer3.entities.assets.MelodyRhythmPattern;
-import cz.habanec.composer3.entities.assets.MelodyTunePattern;
+import cz.habanec.composer3.entities.MelodyRhythmPattern;
+import cz.habanec.composer3.entities.MelodyTunePattern;
+import cz.habanec.composer3.entities.assets.TimeSignature;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -17,12 +18,12 @@ import static cz.habanec.composer3.utils.AlphabetUtils.ALPHABET;
 
 @Service
 @RequiredArgsConstructor
-public class MelodyCreator {
+public class MelodyBuilder {
 
     private final TonalKeyService tonalKeyService;
 
     @Transactional
-    public Melody createNewMelody(
+    public Melody buildUpNewMelody(
             List<MelodyRhythmPattern> shuffledRhythmPatterns,
             List<MelodyTunePattern> shuffledTunePatterns,
             List<String> repetitionPatterns,
@@ -37,7 +38,7 @@ public class MelodyCreator {
         var form = composition.getForm();
         var mainKey = composition.getTonicKey();
         var keyMap = tonalKeyService.extractHarmonySchemaMap(form.getKeyScheme(), mainKey);
-        System.out.printf("MelodyCreator::createNewMelody: harmonySchemaMap: %s%n", keyMap);
+        System.out.printf("MelodyBuilder::buildUpNewMelody: harmonySchemaMap: %s%n", keyMap);
 
         int rhythmSchemaCharIndex;
         int tuneSchemaCharIndex;
@@ -47,6 +48,7 @@ public class MelodyCreator {
         MelodyTunePattern thisTunePattern;
         String thisRepetitionPattern;
         TonalKey currentKey = mainKey;
+        TimeSignature timeSignature = composition.getTimeSignature();
 
         List<MelodyMeasure> measureList = new ArrayList<>();
         for (int i = 0; i < form.getMeasureCount(); i++) {
@@ -61,7 +63,7 @@ public class MelodyCreator {
             var newMeasure = MelodyMeasure.builder()
                     .measureIndex(i)
                     .melody(melody)
-                    .numOfBeats(4)
+                    .timeSignature(timeSignature)
                     .rhythmPattern(thisRhythmPattern)
                     .tunePattern(thisTunePattern)
                     .repetitionSchema(thisRepetitionPattern)
@@ -77,7 +79,7 @@ public class MelodyCreator {
         }
         melody.setMelodyMeasureList(measureList);
 
-        System.out.printf("MelodyCreator::createNewMelody: Created melody with %d measures.%n", measureList.size());
+        System.out.printf("MelodyBuilder::buildUpNewMelody: Built melody with %d measures.%n", measureList.size());
         return melody;
     }
 }

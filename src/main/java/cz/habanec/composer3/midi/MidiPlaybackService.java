@@ -1,4 +1,4 @@
-package cz.habanec.composer3.service;
+package cz.habanec.composer3.midi;
 
 import cz.habanec.composer3.entities.Composition;
 import lombok.RequiredArgsConstructor;
@@ -28,7 +28,7 @@ public class MidiPlaybackService {
         sequencerService.midiInit();
         return sequencerService.record(myComposition,
                 "skladby/" +
-                        LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyMMdd-HH:mm")),
+                        LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyMMdd")),
                 myComposition.getId().toString()
         );
     }

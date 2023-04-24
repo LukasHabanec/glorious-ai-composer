@@ -1,5 +1,6 @@
 package cz.habanec.composer3.utils;
 
+import cz.habanec.composer3.entities.enums.NoteLength;
 import lombok.Value;
 import lombok.experimental.UtilityClass;
 import org.springframework.util.StringUtils;
@@ -7,7 +8,6 @@ import org.springframework.util.StringUtils;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.stream.Collectors;
 
 @UtilityClass
@@ -19,7 +19,7 @@ public class PatternStringUtils {
     public static final String COMMA_JOIN_DELIMITER = ",";
 
 
-    public static String stringyfyPattern(List<Integer> list) {
+    public static String joinIntListWithCommas(List<Integer> list) {
         return list.stream().map(String::valueOf).collect(Collectors.joining(COMMA_JOIN_DELIMITER));
     }
 
@@ -64,8 +64,35 @@ public class PatternStringUtils {
         return sb.toString().trim();
     }
 
-    public static boolean isPatternNotUnique(String newPattern, List<String> rhythmPatterns) {
+    public static boolean isPatternNotUnique(List<Integer> newPattern, List<List<Integer>> rhythmPatterns) {
         return rhythmPatterns.stream().anyMatch(newPattern::equals);
+    }
+
+    public static NoteLength extractShortestNoteLength(List<Integer> pattern) {
+        int lowestValue = pattern.stream().min(Integer::compareTo).get();
+        return NoteLength.VALUES_MAP_BY_MIDI_VALUE.get(lowestValue);
+    }
+
+    public static String convertRhythmValuesToLabelsAndStringify(List<Integer> pattern) {
+        return pattern.stream()
+                .map(NoteLength::getLabelByMidiValue)
+                .collect(Collectors.joining(" "));
+    }
+
+    public static List<Integer> convertRhythmLabelStringToValues(String body) {
+        return Arrays.stream(body.split(WHITESPACE_REGEX_DELIMITER))
+                .map(NoteLength::getMidiValueByLabel)
+                .toList();
+    }
+
+    public static int getUniqueValuesCount(List<Integer> list) {
+        return (int) list.stream().distinct().count();
+    }
+
+    public static int getTunePatternsAmbitus(List<Integer> pattern) {
+        int max = pattern.stream().max(Integer::compareTo).get();
+        int min = pattern.stream().min(Integer::compareTo).get();
+        return max + Math.abs(min) + 1;
     }
 
     //    public static String getHarmonyFragmentationForView(int harmonyFragmentationIndex) {

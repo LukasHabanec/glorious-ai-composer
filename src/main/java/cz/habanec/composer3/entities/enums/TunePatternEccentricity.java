@@ -6,9 +6,9 @@ import lombok.Getter;
 @Getter
 @AllArgsConstructor
 public enum TunePatternEccentricity {
-    NO_ECCENTRICITY(0),
-    LOW_ECCENTRICITY(1),
-    MID_ECCENTRICITY(2),
-    HIGH_ECCENTRICITY(3);
+    ZERO(0),
+    LOW(1),
+    MIDDLE(2),
+    HIGH(3);
     private final int value;
 }
