@@ -34,9 +34,8 @@ public class CompositionService {
 
     public CompositionDto getCurrentCompositionForView(Long id) {
 
-        if (Objects.isNull(currentComposition) || !id.equals(currentComposition.getId())) {
-            currentComposition = loadComposition(id);
-        }
+        currentComposition = getCurrentComposition(id);
+
         return CompositionDto.builder()
                 .id(currentComposition.getId())
                 .title(currentComposition.getTitle())

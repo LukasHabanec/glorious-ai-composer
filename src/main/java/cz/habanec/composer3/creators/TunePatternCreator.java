@@ -2,7 +2,7 @@ package cz.habanec.composer3.creators;
 
 import cz.habanec.composer3.entities.MelodyRhythmPattern;
 import cz.habanec.composer3.entities.MelodyTunePattern;
-import cz.habanec.composer3.entities.enums.TunePatternEccentricity;
+import cz.habanec.composer3.entities.enums.Eccentricity;
 import cz.habanec.composer3.service.PatternService;
 import cz.habanec.composer3.utils.PatternStringUtils;
 import cz.habanec.composer3.utils.ProbabilityUtils;
@@ -33,14 +33,15 @@ public class TunePatternCreator {
     private final PatternService patternService;
 
     public List<MelodyTunePattern> createTunePatternsSet(TunePatternSetIngredients ingredients) {
+        var eccentricityOptions = extractEccentricityListFrom(ingredients.eccentricityOptions);
         List<List<Integer>> tunePatternsRaw = new ArrayList<>();
         List<Integer> newPattern;
-        for (int i = 0; i < ingredients.ambitusOptions.length; i++) {
+        for (int i = 0; i < ingredients.ambitusOptions.size(); i++) {
             do {
                 newPattern = createOneTunePattern(
-                        ingredients.ambitusOptions[i],
-                        ingredients.toneAmountOptions[i],
-                        ingredients.eccentricityOptions[i]);
+                        ingredients.ambitusOptions.get(i),
+                        ingredients.toneAmountOptions.get(i),
+                        eccentricityOptions.get(i));
             }
             while (isPatternNotUnique(newPattern, tunePatternsRaw));
 
@@ -54,23 +55,14 @@ public class TunePatternCreator {
                                     .rndCreated(true)
                                     .formAssociationId(ingredients.formId)
                                     .ambitus(PatternStringUtils.getTunePatternsAmbitus(pattern))
-                                    .eccentricity(ingredients.eccentricityOptions[index])
+                                    .eccentricity(eccentricityOptions.get(index))
                                     .toneAmount(PatternStringUtils.getUniqueValuesCount(pattern))
                                     .body(PatternStringUtils.joinIntListWithCommas(pattern))
                                     .build());
                 }).toList();
     }
 
-    /**
-     * excentricity: skoky/kroky - dava smysl pro vetsi ambitus a toneAmount, jinak ma nejnizsi prioritu
-     * <p>
-     * toneAmount: pocet ruznych vysek, 2-9 ambitus: maximalni/povinny vyskovy rozsah, mel by mit prioritu oproti
-     * toneAmountu = ambitus 2 tony znamena snizit toneAmount na 2 (anebo naopak?) anebo ambitus zrusim ? toneAmount
-     * obstara pocet a excentricity rozsah stejne porad nevim, jak dosahnu pozadovane excentricity - ona jen umoznuje
-     * vetsi skoky, ale nezajistuje je
-     * excentricity bude mit asi 3 stupne a podle nej budu volit metodu tvorby - vic nebo min skakavou
-     */
-    private List<Integer> createOneTunePattern(int ambitus, int toneAmount, TunePatternEccentricity eccentricity) {
+    private List<Integer> createOneTunePattern(int ambitus, int toneAmount, Eccentricity eccentricity) {
         //
         ambitus = max(ambitus, 2);
         toneAmount = max(toneAmount, 2);
@@ -80,7 +72,7 @@ public class TunePatternCreator {
         System.out.println("TunePatternCreator::createOneTunePattern: randomly generated eligible values:" + eligibleValues);
 
         List<Integer> pattern;
-        if (TunePatternEccentricity.HIGH.equals(eccentricity)) {
+        if (Eccentricity.HIGH.equals(eccentricity)) {
             pattern = generateRandomPatternUsingMbiraMethod(eligibleValues);
         } else {
             pattern = generateRandomPatternUsingStepMethod(eligibleValues, eccentricity);
@@ -138,7 +130,7 @@ public class TunePatternCreator {
     }
 
     private List<Integer> generateRandomPatternUsingStepMethod(List<Integer> eligibleValues,
-                                                               TunePatternEccentricity eccentricity) {
+                                                               Eccentricity eccentricity) {
         List<Integer> pattern = new ArrayList<>();
         int eligibleValuesSize = eligibleValues.size();
 
@@ -188,11 +180,14 @@ public class TunePatternCreator {
         return step;
     }
 
-    public List<String> createRepetitionPatternSet(List<MelodyRhythmPattern> rhythmPatterns, int[] densityOptions) {
+    public List<String> createRepetitionPatternSet(
+            List<MelodyRhythmPattern> rhythmPatterns,
+            List<Integer> densityOptions
+    ) {
         return Stream.iterate(0, n -> ++n).limit(rhythmPatterns.size())
                 .map(index -> createOneRepetitionPattern(
                         rhythmPatterns.get(index).getValues().size(),
-                        densityOptions[index]))
+                        densityOptions.get(index)))
                 .collect(Collectors.toList());
     }
 
@@ -256,11 +251,17 @@ public class TunePatternCreator {
         }
     }
 
+    private List<Eccentricity> extractEccentricityListFrom(List<Integer> eccentricityOptions) {
+        return eccentricityOptions.stream()
+                .map(number -> Eccentricity.values()[number])
+                .collect(Collectors.toList());
+    }
+
     @Builder
     public static class TunePatternSetIngredients {
-        private int[] ambitusOptions;
-        private int[] toneAmountOptions;
-        private TunePatternEccentricity[] eccentricityOptions;
+        private List<Integer> ambitusOptions;
+        private List<Integer> toneAmountOptions;
+        private List<Integer> eccentricityOptions;
         private long formId;
     }
 }

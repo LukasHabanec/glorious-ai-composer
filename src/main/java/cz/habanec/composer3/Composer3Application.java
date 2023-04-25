@@ -1,10 +1,8 @@
 package cz.habanec.composer3;
 
+import cz.habanec.composer3.creators.CompositionCreator;
 import cz.habanec.composer3.creators.RhythmPatternCreator;
 import cz.habanec.composer3.creators.TunePatternCreator;
-import cz.habanec.composer3.entities.assets.TimeSignature;
-import cz.habanec.composer3.entities.enums.NoteLength;
-import cz.habanec.composer3.entities.enums.TunePatternEccentricity;
 import cz.habanec.composer3.midi.MidiPlaybackService;
 import cz.habanec.composer3.repositories.CompositionFormRepo;
 import cz.habanec.composer3.repositories.CompositionRepo;
@@ -16,7 +14,6 @@ import cz.habanec.composer3.repositories.MelodyTunePatternRepo;
 import cz.habanec.composer3.repositories.ModusRepo;
 import cz.habanec.composer3.repositories.QuintCircleKeyRepo;
 import cz.habanec.composer3.service.*;
-import cz.habanec.composer3.service.CompositionBuilder.NewCompositionIngredients;
 import cz.habanec.composer3.utils.AlphabetUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.CommandLineRunner;
@@ -25,10 +22,6 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.sql.DataSource;
-
-import java.util.Arrays;
-
-import static cz.habanec.composer3.utils.ProbabilityUtils.RANDOM;
 
 @SpringBootApplication
 @RequiredArgsConstructor
@@ -55,6 +48,7 @@ public class Composer3Application implements CommandLineRunner {
     private final TunePatternCreator tunePatternCreator;
     private final CompositionFormService formService;
     private final TimeSignatureService timeSignatureService;
+    private final CompositionCreator compositionCreator;
 
 
     public static void main(String[] args) {
@@ -103,84 +97,18 @@ public class Composer3Application implements CommandLineRunner {
 
 //		Arrays.stream(NoteLength.values()).map(NoteLength::getMidiValue).forEach(System.out::println);
 //		compositionRepo.findAll().forEach(midiPlaybackService::exportMidi);
-
-
-//		newFromRandom("CL-runner", "6/8");
-
+//        go();
     }
+    void go() {
+        compositionCreator.createNewRandomComposition(CompositionCreator.RandomCompositionIngredients.builder()
+                .formTitle("CL-runner")
+                .quintCircleKeyLabel("F")
+                .modusLabel("MAJOR")
+                .timeSignatureLabel("4/4")
+                .title(AlphabetUtils.generateRandomName())
+                .build()
+        );
 
-
-    public void newFromRandom(String formTitle, String timeSignatureLabel) {
-
-        final NoteLength[] RHYTHM_GRANULARITY_OPTIONS = {
-                NoteLength.HALF_NOTE,
-                NoteLength.QUARTER_NOTE,
-                NoteLength.EIGHT_NOTE};
-        final int[] TUNE_REPETITION_DENSITY_OPTIONS = {20, 40, 70};
-        int[] repetitionDensityOptions = {
-                RANDOM.nextInt(101),
-                RANDOM.nextInt(101),
-                RANDOM.nextInt(101),
-        };
-        final TunePatternEccentricity[] TUNE_ECCENTRICITY_OPTIONS = {
-                TunePatternEccentricity.ZERO,
-                TunePatternEccentricity.MIDDLE,
-                TunePatternEccentricity.HIGH
-        };
-        final boolean[] rhythmEccentricOptions = {false, false, false};
-        final int[] valueCountOptions = {
-                RANDOM.nextInt(1, 16 + 1),
-                RANDOM.nextInt(1, 16 + 1),
-                RANDOM.nextInt(1, 16 + 1)
-        };
-
-        var form = formService.getFormByTitle(formTitle);
-        var mainKey = tonalKeyService.getTonalKeyByLabels("A", "MAJOR");
-        var timeSignature = timeSignatureService.fetchOrCreateTimeSignature(timeSignatureLabel);
-
-        var rhythmPatterns = rhythmPatternCreator.createRhythmPatternsSet(
-                RhythmPatternCreator.RhythmPatternSetIngredients.builder()
-                        .formId(form.getId())
-                        .timeSignature(timeSignature)
-                        .eccentricOptions(rhythmEccentricOptions)
-                        .granularityOptions(RHYTHM_GRANULARITY_OPTIONS)
-                        .valueCountOptions(valueCountOptions)
-                        .build());
-
-        int[] tunePatternAmbitusOptions = {
-                RANDOM.nextInt(2, 9),
-                RANDOM.nextInt(2, 9),
-                RANDOM.nextInt(2, 9)
-        };
-        int[] tunePatternToneAmountOptions = {
-                RANDOM.nextInt(2, 9),
-                RANDOM.nextInt(2, 9),
-                RANDOM.nextInt(2, 9)
-        };
-
-        var tunePatterns = tunePatternCreator.createTunePatternsSet(TunePatternCreator.TunePatternSetIngredients.builder()
-                .formId(form.getId())
-                .eccentricityOptions(TUNE_ECCENTRICITY_OPTIONS)
-                .ambitusOptions(tunePatternAmbitusOptions)
-                .toneAmountOptions(tunePatternToneAmountOptions)
-                .build());
-
-
-        var repetitionPatterns = tunePatternCreator.createRepetitionPatternSet(rhythmPatterns, repetitionDensityOptions);
-
-        var title = AlphabetUtils.generateRandomName();
-        var tempo = RANDOM.nextInt(60, 260);
-
-        compositionService.setCurrentComposition(compositionBuilder.buildNewComposition(NewCompositionIngredients.builder()
-                .rhythmPatterns(rhythmPatterns)
-                .tunePatterns(tunePatterns)
-                .repetitionPatterns(repetitionPatterns)
-                .mainKey(mainKey)
-                .timeSignature(timeSignature)
-                .form(form)
-                .title(title)
-                .tempo(tempo)
-                .build()));
     }
 
 //		var composition = migrationService.migrateOldCompositionFrom(

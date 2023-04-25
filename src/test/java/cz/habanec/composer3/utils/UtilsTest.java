@@ -4,6 +4,7 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.springframework.util.StringUtils;
 
+import java.util.Arrays;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -32,6 +33,18 @@ class UtilsTest {
 
         result = PatternStringUtils.getTunePatternsAmbitus(List.of(0, 0, 0, 0));
         Assertions.assertEquals(result, 1);
+    }
+
+    @Test
+    void returnShuffledCustomOptionsEvenlyBounded() {
+        var result = ProbabilityUtils.getRandomAndShuffledCustomOptionsListEvenlyBounded(3, 2, 9);
+        System.out.println(result);
+        result = ProbabilityUtils.getRandomAndShuffledCustomOptionsListEvenlyBounded(4, 0, 100);
+        System.out.println(result);
+        result = ProbabilityUtils.getRandomAndShuffledCustomOptionsListEvenlyBounded(5, 5, 10);
+        System.out.println(result);
+        result = ProbabilityUtils.getRandomAndShuffledCustomOptionsListEvenlyBounded(10, 0, 3);
+        System.out.println(result);
     }
 
 }

@@ -83,7 +83,7 @@
             <span th:text="${measure.userSpecialShifter}"></span>
             <a th:href="@{'/composer/composition/' + ${composition.id} + '/shiftUp?index=' + ${measure.index}}">>></a>
         </td>
-        <td th:text="${measure.patternString}"></td>
+        <td th:text="${measure.patternString}" style="font: mono;"></td>
         <td th:text="${measure.currentKey}"></td>
 
 <!--        <td th:switch="${measure.harmonyFragmentationString}" style="background: gray;"-->

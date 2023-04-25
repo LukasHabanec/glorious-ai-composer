@@ -84,6 +84,7 @@ public class ComposerController {
             @PathVariable(name = "id") Long compositionId,
             RedirectAttributes att) {
         String message = compositionService.saveCurrentComposition(compositionId);
+        compositionId = compositionService.getCurrentComposition().getId();
         att.addFlashAttribute("message", message);
         return "redirect:/composer/composition/" + compositionId;
     }

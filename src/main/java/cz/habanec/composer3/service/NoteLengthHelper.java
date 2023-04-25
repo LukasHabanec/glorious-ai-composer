@@ -3,9 +3,8 @@ package cz.habanec.composer3.service;
 import cz.habanec.composer3.entities.enums.NoteLength;
 import lombok.experimental.UtilityClass;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
+import java.util.*;
+import java.util.stream.Collectors;
 
 import static cz.habanec.composer3.utils.PatternStringUtils.UNDERSCORE_DELIMITER;
 
@@ -13,6 +12,7 @@ import static cz.habanec.composer3.utils.PatternStringUtils.UNDERSCORE_DELIMITER
 public class NoteLengthHelper {
 
     public static final int MIN_RHYTHM_VALUE = 3;
+    public static final int DEFAULT_GRANULARITY_DEPTH = 2;
 
     public static String glueLabelsForValueAndAddToMap(final int initialMidiValue) {
         int midiValue = initialMidiValue;
@@ -52,4 +52,29 @@ public class NoteLengthHelper {
 
         return valuesSum;
     }
+
+    public static NoteLength getHalfTheLengthOf(NoteLength noteLength) {
+        return NoteLength.VALUES_MAP_BY_MIDI_VALUE.get(noteLength.getMidiValue() / 2);
+    }
+
+    public static NoteLength getDoubledLengthOf(NoteLength noteLength) {
+        return NoteLength.VALUES_MAP_BY_MIDI_VALUE.get(noteLength.getMidiValue() * 2);
+    }
+
+    public static List<NoteLength> extractNoteLengthListFrom(List<Integer> granularityOptions, NoteLength beat) {
+        Map<Integer, NoteLength> granularityMap = new HashMap<>();
+        feedGranularityMapOfHalvedNoteLengths(granularityMap, getDoubledLengthOf(beat), DEFAULT_GRANULARITY_DEPTH);
+
+        return granularityOptions.stream().map(granularityMap::get).collect(Collectors.toList());
+    }
+
+    private static void feedGranularityMapOfHalvedNoteLengths(
+            Map<Integer, NoteLength> map, NoteLength noteLength, int depth
+    ) {
+        map.put(depth, noteLength);
+        if (depth > 0) {
+            feedGranularityMapOfHalvedNoteLengths(map, getHalfTheLengthOf(noteLength), depth - 1);
+        }
+    }
+
 }

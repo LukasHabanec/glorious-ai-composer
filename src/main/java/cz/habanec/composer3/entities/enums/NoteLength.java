@@ -15,7 +15,7 @@ import static cz.habanec.composer3.utils.Properties.DEFAULT_MIDI_RESOLUTION;
 @Getter
 @AllArgsConstructor
 public enum NoteLength {
-
+    DOUBLE_WHOLE_NOTE(DEFAULT_MIDI_RESOLUTION * 8, "21"),
     WHOLE_NOTE(DEFAULT_MIDI_RESOLUTION * 4, "1"),
     HALF_NOTE(DEFAULT_MIDI_RESOLUTION * 2, "2"),
     DOTTED_HALF_NOTE(DEFAULT_MIDI_RESOLUTION * 3, "2."),
@@ -64,5 +64,6 @@ public enum NoteLength {
                 ? midiValue
                 : NoteLengthHelper.getMidiValueBySplittingLabelAndAddToMap(label);
     }
+
 
 }

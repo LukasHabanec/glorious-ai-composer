@@ -2,7 +2,6 @@ package cz.habanec.composer3.creators;
 
 import cz.habanec.composer3.entities.MelodyRhythmPattern;
 import cz.habanec.composer3.entities.assets.TimeSignature;
-import cz.habanec.composer3.entities.enums.NoteLength;
 import cz.habanec.composer3.service.NoteLengthHelper;
 import cz.habanec.composer3.service.PatternService;
 import cz.habanec.composer3.utils.PatternStringUtils;
@@ -29,19 +28,24 @@ public class RhythmPatternCreator {
 
         var valuesCountOptions = ingredients.valueCountOptions;
         var timeSignature = ingredients.timeSignature;
-        var granularityOptions = ingredients.granularityOptions;
+        var granularityOptions = NoteLengthHelper.extractNoteLengthListFrom(
+                ingredients.granularityOptions, timeSignature.getBeat());
 
         List<List<Integer>> rhythmPatternsRaw = new ArrayList<>();
         List<Integer> newPattern;
-        for (int i = 0; i < granularityOptions.length; i++) {
+        for (int i = 0; i < granularityOptions.size(); i++) {
 
             do {
-                if (ingredients.eccentricOptions[i]) {
+                if (ingredients.eccentricOptions.get(i) == 1) {
                     newPattern = createRandomRhythmPatternBodyBySquashing(
-                            timeSignature.getMidiLength(), valuesCountOptions[i], granularityOptions[i].getMidiValue());
+                            timeSignature.getMidiLength(),
+                            valuesCountOptions.get(i),
+                            granularityOptions.get(i).getMidiValue());
                 } else {
                     newPattern = createRandomRhythmPatternBodyByCutting(
-                            timeSignature.getMidiLength(), valuesCountOptions[i], granularityOptions[i].getMidiValue());
+                            timeSignature.getMidiLength(),
+                            valuesCountOptions.get(i),
+                            granularityOptions.get(i).getMidiValue());
                 }
             }
             while (isPatternNotUnique(newPattern, rhythmPatternsRaw));
@@ -167,10 +171,10 @@ public class RhythmPatternCreator {
 
     @Builder
     public static class RhythmPatternSetIngredients {
-        NoteLength[] granularityOptions;
-        int[] valueCountOptions;
+        List<Integer> granularityOptions;
+        List<Integer> valueCountOptions;
         long formId;
         TimeSignature timeSignature;
-        boolean[] eccentricOptions;
+        List<Integer> eccentricOptions;
     }
 }

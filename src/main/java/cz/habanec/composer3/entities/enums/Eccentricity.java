@@ -5,7 +5,7 @@ import lombok.Getter;
 
 @Getter
 @AllArgsConstructor
-public enum TunePatternEccentricity {
+public enum Eccentricity {
     ZERO(0),
     LOW(1),
     MIDDLE(2),

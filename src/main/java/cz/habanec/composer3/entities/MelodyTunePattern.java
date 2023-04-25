@@ -1,7 +1,7 @@
 package cz.habanec.composer3.entities;
 
 import cz.habanec.composer3.entities.assets.Pattern;
-import cz.habanec.composer3.entities.enums.TunePatternEccentricity;
+import cz.habanec.composer3.entities.enums.Eccentricity;
 import cz.habanec.composer3.utils.PatternStringUtils;
 import jakarta.persistence.*;
 import lombok.*;
@@ -34,7 +34,7 @@ public class MelodyTunePattern implements Pattern {
     private Integer ambitus;
 
     @Enumerated(EnumType.STRING)
-    private TunePatternEccentricity eccentricity;
+    private Eccentricity eccentricity;
 
     @Column(name = "rnd_created")
     private Boolean rndCreated;
