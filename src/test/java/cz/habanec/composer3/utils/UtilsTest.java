@@ -4,7 +4,6 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.springframework.util.StringUtils;
 
-import java.util.Arrays;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -15,7 +14,7 @@ class UtilsTest {
     void returnExpectedRandomString() {
 
         for (int i = 0; i < 10; i++) {
-            var result = AlphabetUtils.generateRandomName();
+            var result = AlphabetUtils.generateRandomTwoWordsName();
             System.out.println(result);
             Assertions.assertTrue(StringUtils.hasLength(result));
             assertTrue(result.matches("[A-Z][a-z]{1,12}\s[A-Z][a-z]{1,12}"));

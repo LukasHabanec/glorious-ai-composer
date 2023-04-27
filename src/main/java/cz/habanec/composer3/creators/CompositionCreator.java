@@ -1,5 +1,6 @@
 package cz.habanec.composer3.creators;
 
+import cz.habanec.composer3.entities.enums.ModusLabel;
 import cz.habanec.composer3.entities.enums.NoteLength;
 import cz.habanec.composer3.entities.enums.Eccentricity;
 import cz.habanec.composer3.service.*;
@@ -98,6 +99,7 @@ public class CompositionCreator {
     @Value
     @Builder
     public static class RandomCompositionIngredients {
-        String formTitle, timeSignatureLabel, title, quintCircleKeyLabel, modusLabel;
+        String formTitle, timeSignatureLabel, title, quintCircleKeyLabel;
+        ModusLabel modusLabel;
     }
 }

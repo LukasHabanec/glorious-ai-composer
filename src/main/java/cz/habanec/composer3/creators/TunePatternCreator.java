@@ -13,7 +13,6 @@ import org.springframework.stereotype.Service;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Random;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -27,8 +26,6 @@ import static java.lang.Math.min;
 public class TunePatternCreator {
 
     private static final int TUNE_PATTERN_DEFAULT_SIZE = 9;
-    private static final int STEP_RESOLVING_DEFAULT_UPPER_LIMIT = 12;
-    private static final int STEP_RESOLVING_DEFAULT_LOWER_LIMIT = 7;
 
     private final PatternService patternService;
 
@@ -155,7 +152,7 @@ public class TunePatternCreator {
 
                 pattern.add(eligibleValues.get(newToneIndex));
 
-                nextStep = resolveStepFrom(ProbabilityUtils.rollDice(3), eccentricity.getValue());
+                nextStep = ProbabilityUtils.resolveStepByRollingThreeDice(eccentricity.getValue());
                 nextStep = upwards ? nextStep : -nextStep;
 
             }
@@ -165,19 +162,6 @@ public class TunePatternCreator {
             }
         }
         return pattern;
-    }
-
-
-    private int resolveStepFrom(int threeDiceRoll, int eccentricity) {
-        int upperLimit = STEP_RESOLVING_DEFAULT_UPPER_LIMIT - eccentricity;
-        int lowerLimit = STEP_RESOLVING_DEFAULT_LOWER_LIMIT + eccentricity;
-        int step = 1;
-        if (threeDiceRoll > upperLimit) {
-            step = threeDiceRoll - upperLimit;
-        } else if (threeDiceRoll < lowerLimit) {
-            step = lowerLimit - threeDiceRoll;
-        }
-        return step;
     }
 
     public List<String> createRepetitionPatternSet(
@@ -206,10 +190,11 @@ public class TunePatternCreator {
             return "0_" + valuesCount;
         }
         List<Integer> repetitions = Stream.generate(() -> 1).limit(valuesCount).collect(Collectors.toList());
-        var rnd = new Random();
+
         int amount;
         for (int remains = valuesCount; remains > 1; remains--) {
-            amount = min(remains, evaluateDiceRollAndDensityForRepetitions(rnd.nextInt(101), density, valuesCount));
+            amount = min(remains, evaluateDiceRollAndDensityForRepetitions(
+                    RANDOM.nextInt(101), density, valuesCount));
             if (amount == 1) {
                 continue;
             }

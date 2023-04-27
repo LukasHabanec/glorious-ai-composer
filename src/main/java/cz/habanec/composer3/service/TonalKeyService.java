@@ -3,6 +3,7 @@ package cz.habanec.composer3.service;
 import cz.habanec.composer3.entities.TonalKey;
 import cz.habanec.composer3.entities.assets.Modus;
 import cz.habanec.composer3.entities.assets.QuintCircleKey;
+import cz.habanec.composer3.entities.enums.ModusLabel;
 import cz.habanec.composer3.repositories.ModusRepo;
 import cz.habanec.composer3.repositories.QuintCircleKeyRepo;
 import cz.habanec.composer3.repositories.TonalKeyRepo;
@@ -40,7 +41,7 @@ public class TonalKeyService {
     }
 
     @Transactional
-    public TonalKey getTonalKeyByLabels(String quintCircleKeyLabel, String modusLabel) {
+    public TonalKey getTonalKeyByLabels(String quintCircleKeyLabel, ModusLabel modusLabel) {
         var quintCircleKeyOpt = quintCircleKeyRepo.findByLabel(quintCircleKeyLabel);
         var modusOpt = modusRepo.findByLabel(modusLabel);
         return getTonalKey(quintCircleKeyOpt, modusOpt);

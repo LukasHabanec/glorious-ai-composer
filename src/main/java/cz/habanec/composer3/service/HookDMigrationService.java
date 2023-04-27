@@ -74,7 +74,7 @@ public class HookDMigrationService {
                 shuffledTuneIndexes, tunePatterns);
 
         var composition = compositionBuilder.buildNewComposition(NewCompositionIngredients.builder()
-                .title(ingredients.getHash() + " " + AlphabetUtils.generateRandomName())
+                .title(ingredients.getHash() + " " + AlphabetUtils.generateRandomTwoWordsName())
                 .rhythmPatterns(reconstructedRhythmPatterns)
                 .tunePatterns(reconstructedTunePatterns)
                 .timeSignature(timeSignature)

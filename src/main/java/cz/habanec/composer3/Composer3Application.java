@@ -1,8 +1,12 @@
 package cz.habanec.composer3;
 
 import cz.habanec.composer3.creators.CompositionCreator;
+import cz.habanec.composer3.creators.CompositionFormCreator;
 import cz.habanec.composer3.creators.RhythmPatternCreator;
 import cz.habanec.composer3.creators.TunePatternCreator;
+import cz.habanec.composer3.entities.CompositionForm;
+import cz.habanec.composer3.entities.enums.Eccentricity;
+import cz.habanec.composer3.entities.enums.ModusLabel;
 import cz.habanec.composer3.midi.MidiPlaybackService;
 import cz.habanec.composer3.repositories.CompositionFormRepo;
 import cz.habanec.composer3.repositories.CompositionRepo;
@@ -49,6 +53,7 @@ public class Composer3Application implements CommandLineRunner {
     private final CompositionFormService formService;
     private final TimeSignatureService timeSignatureService;
     private final CompositionCreator compositionCreator;
+    private final CompositionFormCreator formCreator;
 
 
     public static void main(String[] args) {
@@ -86,26 +91,34 @@ public class Composer3Application implements CommandLineRunner {
         System.out.println("Running CL-runner");
 //		hookDMigrationService.migrateAssets();
 
-//		var newForm = CompositionForm.builder()
-//				.title("CL-runner")
-//				.measureCount(8)
-//				.keyScheme("0_0 5_-4 7_0")
-//				.melodyRhythmScheme("AABACCBA")
-//				.melodyTuneScheme("AABACCBA")
-//				.build();
-//		compositionFormRepo.save(newForm);
 
 //		Arrays.stream(NoteLength.values()).map(NoteLength::getMidiValue).forEach(System.out::println);
 //		compositionRepo.findAll().forEach(midiPlaybackService::exportMidi);
-//        go();
+//        var formTitle = AlphabetUtils.generateRandomName(5);
+//        var form = goNewForm(formTitle);
+        goNewComposition("Vuxyv");
     }
-    void go() {
+
+    private CompositionForm goNewForm(String title) {
+        int measureCount = 12;
+        var universalSchema = formCreator.createRandomLetterScheme(measureCount, 4, Eccentricity.HIGH);
+        var newForm = CompositionForm.builder()
+                .title(title)
+                .measureCount(measureCount)
+                .keyScheme("0_0 4_1 8_0")
+                .melodyRhythmScheme(universalSchema)
+                .melodyTuneScheme(universalSchema)
+                .build();
+        return compositionFormRepo.save(newForm);
+    }
+
+    void goNewComposition(String formTitle) {
         compositionCreator.createNewRandomComposition(CompositionCreator.RandomCompositionIngredients.builder()
-                .formTitle("CL-runner")
-                .quintCircleKeyLabel("F")
-                .modusLabel("MAJOR")
-                .timeSignatureLabel("4/4")
-                .title(AlphabetUtils.generateRandomName())
+                .formTitle(formTitle)
+                .quintCircleKeyLabel("D")
+                .modusLabel(ModusLabel.MAJOR)
+                .timeSignatureLabel("3/4")
+                .title(formTitle + " " + AlphabetUtils.generateRandomTwoWordsName())
                 .build()
         );
 

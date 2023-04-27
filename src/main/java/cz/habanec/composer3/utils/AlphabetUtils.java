@@ -2,7 +2,7 @@ package cz.habanec.composer3.utils;
 
 import lombok.experimental.UtilityClass;
 
-import java.util.Random;
+import static cz.habanec.composer3.utils.ProbabilityUtils.RANDOM;
 
 @UtilityClass
 public class AlphabetUtils {
@@ -13,37 +13,35 @@ public class AlphabetUtils {
 
     public static final String SCRABBLE_FREQUENCY_WOVELS = "aaeeiioouy";
     public static final String SCRABBLE_FREQUENCY_CONSONANTS = "bcccdddfghhjjkkklllmmnnnpppqrrrssstttvvwxyzz";
+    private static final int TWO_WORDS_NAME_MAX_LENGTH = 17;
+    private static final int TWO_WORDS_NAME_MIN_LENGTH = 7;
 
     public static String cleanUpString(String string) {
         return string.replaceAll("[^A-Za-z]","");
     }
 
-    public static String setHash(int length) {
+    public static String generateRandomTwoWordsName() {
 
-        StringBuilder randomString = new StringBuilder();
-        for (int i = 0; i < length; i++) {
-            randomString.append(LITERALS.charAt((int) (Math.random() * LITERALS.length())));
-        }
-        return randomString.toString();
+        int length = RANDOM.nextInt(TWO_WORDS_NAME_MIN_LENGTH, TWO_WORDS_NAME_MAX_LENGTH);
+        int spaceIndex = RANDOM.nextInt(2, length - 2);
+
+        StringBuilder sb = new StringBuilder();
+        sb.append(generateRandomName(spaceIndex)).append(' ').append(generateRandomName(length - spaceIndex));
+
+        return sb.toString();
     }
 
-    public static String generateRandomName() {
-        Random random = new Random();
+    public static String generateRandomName(int length) {
         StringBuilder sb = new StringBuilder();
-        int length = random.nextInt(7,17);
-        int spaceIndex = random.nextInt(2, length - 2);
-        int startsWithVocal = random.nextInt(2);
+        int startsWithVocal = RANDOM.nextInt(2);
         for (int i = 0; i < length; i++) {
             char newCh;
-            if (i == spaceIndex) {
-                newCh = ' ';
-                startsWithVocal = random.nextInt(2);
-            } else if (i % 2 == startsWithVocal) {
-                newCh = SCRABBLE_FREQUENCY_CONSONANTS.charAt(random.nextInt(SCRABBLE_FREQUENCY_CONSONANTS.length()));
+            if (i % 2 == startsWithVocal) {
+                newCh = SCRABBLE_FREQUENCY_CONSONANTS.charAt(RANDOM.nextInt(SCRABBLE_FREQUENCY_CONSONANTS.length()));
             } else {
-                newCh = SCRABBLE_FREQUENCY_WOVELS.charAt(random.nextInt(SCRABBLE_FREQUENCY_WOVELS.length()));
+                newCh = SCRABBLE_FREQUENCY_WOVELS.charAt(RANDOM.nextInt(SCRABBLE_FREQUENCY_WOVELS.length()));
             }
-            if (i == 0 || i == spaceIndex + 1) {
+            if (i == 0) {
                 newCh = Character.toUpperCase(newCh);
             }
             sb.append(newCh);

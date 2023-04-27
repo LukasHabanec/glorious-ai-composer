@@ -103,7 +103,7 @@ public class RhythmPatternCreator {
             list.addAll(valueToCutRandomIndex, List.of(fragments[0], fragments[1]));
         }
 
-        System.out.printf("PatternCreator::createRandomRhythmPatternByCutting: %s%n", list);
+        System.out.printf("RhythmPatternCreator::createRandomRhythmPatternByCutting: %s%n", list);
         return list;
     }
 
@@ -146,7 +146,7 @@ public class RhythmPatternCreator {
         while (list.size() > valueCount) {
             squashRandomValues(list);
         }
-        System.out.printf("PatternCreator::createRandomRhythmPatternBySquashing: %s%n", list);
+        System.out.printf("RhythmPatternCreator::createRandomRhythmPatternBySquashing: %s%n", list);
         return list;
     }
 

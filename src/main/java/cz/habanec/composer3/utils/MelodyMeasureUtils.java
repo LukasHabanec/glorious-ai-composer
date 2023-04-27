@@ -43,7 +43,7 @@ public class MelodyMeasureUtils {
             }
         }
         if (currentInvisibleLength > 0) {
-            sb.append(currentInvisibleValue).append("*").append("***".repeat(Math.max(0, (currentInvisibleLength / MIN_VALUE_VISIBLE))));
+            sb.append(currentInvisibleValue).append("*").append("***".repeat(Math.max(0, (currentInvisibleLength / MIN_VALUE_VISIBLE - 1))));
         }
         int beatBarOffset = 0;
         for (int i = 0; i < timeSignature.getNumOfBeats() - 1; i++) {

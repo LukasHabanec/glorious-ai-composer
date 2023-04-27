@@ -13,6 +13,8 @@ import java.util.stream.Stream;
 public class ProbabilityUtils {
 
     public static final Random RANDOM = new Random();
+    private static final int THREE_DICE_NEUTRALITY_UPPER_LIMIT = 12;
+    private static final int THREE_DICE_NEUTRALITY_LOWER_LIMIT = 7;
 
     public static int rollDice(int amount) {
         int result = 0;
@@ -52,4 +54,20 @@ public class ProbabilityUtils {
         Collections.shuffle(list);
         System.out.println("Returning: " + list);
         return list;
-    }}
+    }
+
+    public static int resolveStepByRollingThreeDice(int eccentricity) {
+
+        int threeDiceRoll = rollDice(3);
+        int upperLimit = THREE_DICE_NEUTRALITY_UPPER_LIMIT - eccentricity;
+        int lowerLimit = THREE_DICE_NEUTRALITY_LOWER_LIMIT + eccentricity;
+        int step = 1;
+        if (threeDiceRoll > upperLimit) {
+            step = threeDiceRoll - upperLimit;
+        } else if (threeDiceRoll < lowerLimit) {
+            step = lowerLimit - threeDiceRoll;
+        }
+        return step;
+    }
+
+}
