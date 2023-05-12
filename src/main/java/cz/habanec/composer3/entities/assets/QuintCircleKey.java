@@ -1,11 +1,7 @@
 package cz.habanec.composer3.entities.assets;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
+import cz.habanec.composer3.entities.enums.ToneLabel;
+import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
@@ -29,8 +25,9 @@ public class QuintCircleKey {
     @Column(name = "id", nullable = false)
     private Long id;
 
+    @Enumerated(EnumType.STRING)
     @Column(name = "name", unique = true)
-    private String name;
+    private ToneLabel name;
 
     @Column(name = "label", unique = true)
     private String label;

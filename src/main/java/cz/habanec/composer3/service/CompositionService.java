@@ -1,19 +1,16 @@
 package cz.habanec.composer3.service;
 
 import cz.habanec.composer3.entities.Composition;
-import cz.habanec.composer3.entities.MelodyMeasure;
 import cz.habanec.composer3.entities.dto.CompositionDto;
 import cz.habanec.composer3.entities.dto.CompositionDto.MelodyMeasureDto;
+import cz.habanec.composer3.entities.dto.AllCompositionsDto;
 import cz.habanec.composer3.repositories.CompositionRepo;
-import cz.habanec.composer3.repositories.MelodyRepo;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
@@ -27,11 +24,6 @@ public class CompositionService {
     private Composition currentComposition;
 
 
-    @Transactional
-    public List<String> findAllCompositionTitles() {
-        return compositionRepo.findAllTitles();
-    }
-
     public CompositionDto getCurrentCompositionForView(Long id) {
 
         currentComposition = getCurrentComposition(id);
@@ -40,6 +32,11 @@ public class CompositionService {
                 .id(currentComposition.getId())
                 .title(currentComposition.getTitle())
                 .tempo(currentComposition.getTempo())
+                .key(currentComposition.getTonicKey().getQuintCircleKey().getName().toString())
+                .modus(currentComposition.getTonicKey().getModus().getLabel().toString())
+                .timeSignature(currentComposition.getTimeSignature().getLabel())
+                .createdAt(currentComposition.getCreatedAt())
+                .updatedAt(currentComposition.getUpdatedAt())
                 .melodyMeasureList(currentComposition.getMelody().getMelodyMeasureList().stream()
                         .map(measure -> MelodyMeasureDto.builder()
                                 .index(measure.getMeasureIndex())
@@ -47,8 +44,12 @@ public class CompositionService {
                                 .patternString(measure.getMelodyPatternForView())
                                 .userSpecialShifter(measure.getUserSpecialShifter())
                                 .build())
-                        .toList()
-                ).build();
+                        .toList())
+                .assets(CompositionDto.Assets.builder()
+                        .modi(currentComposition.getAssetsAvailable().getModiAvailable())
+                        .quintCircleKeys(currentComposition.getAssetsAvailable().getKeysAvailable())
+                        .build())
+                .build();
     }
 
     @Transactional
@@ -94,6 +95,21 @@ public class CompositionService {
         return "Successfully saved " + currentComposition.getTitle();
     }
 
+    @Transactional
+    public AllCompositionsDto getAllSavedCompositionsForView() {
+        var compositions = compositionRepo.findAll();
+        return AllCompositionsDto.from(compositions);
+    }
+
+    @Transactional
+    public String deleteCompositionById(Long compositionId) {
+        var compositionForDeleting = compositionRepo.findById(compositionId);
+        if (compositionForDeleting.isPresent()) {
+            compositionRepo.delete(compositionForDeleting.get());
+            return String.format("Composition id %d removed.", compositionId);
+        }
+        return String.format("Cannot remove not existing composition with id %d", compositionId);
+    }
 
 
 //    public void shiftMeasureFirstTone(Integer measureIndex, int shifter) {

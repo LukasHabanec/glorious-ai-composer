@@ -96,7 +96,7 @@ public class Composer3Application implements CommandLineRunner {
 //		compositionRepo.findAll().forEach(midiPlaybackService::exportMidi);
 //        var formTitle = AlphabetUtils.generateRandomName(5);
 //        var form = goNewForm(formTitle);
-        goNewComposition("Vuxyv");
+//        goNewComposition("Vuxyv");
     }
 
     private CompositionForm goNewForm(String title) {

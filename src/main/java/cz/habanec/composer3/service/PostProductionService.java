@@ -20,6 +20,8 @@ public class PostProductionService {
 //                composition.getAccompaniment().getHarmonyFieldList(),
 //                composition.getAccompaniment().getMeasureList()
 //        );
+        System.out.printf("PostProductionService::shiftUserSpecialShifters shifted by %d from the measure %d%n",
+                shifter, measureIndex +1 );
     }
 
 }

@@ -1,82 +1,68 @@
 package cz.habanec.composer3.controllers;
 
-import cz.habanec.composer3.service.CompositionService;
+import cz.habanec.composer3.entities.dto.CompositionDto;
+import cz.habanec.composer3.entities.dto.AllCompositionsDto;
 import cz.habanec.composer3.midi.MidiPlaybackService;
+import cz.habanec.composer3.service.CompositionService;
 import cz.habanec.composer3.service.PostProductionService;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
-import org.springframework.stereotype.Controller;
-import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.ModelAttribute;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
-@Controller
-@RequestMapping("/composer/old")
+@RestController
+@RequestMapping("/composer")
 @RequiredArgsConstructor
-public class ComposerController {
+public class ComposerRestController {
 
     private final MidiPlaybackService midiPlaybackService;
     private final CompositionService compositionService;
     private final PostProductionService postProductionService;
 
+    @GetMapping("/compositions")
+    public ResponseEntity<AllCompositionsDto> showSavedCompositions() {
+        var compositionsDto = compositionService.getAllSavedCompositionsForView();
+        return ResponseEntity.ok(compositionsDto);
+    }
+
     @GetMapping("/composition/{id}")
-    public String showComposition(Model model, @PathVariable(name = "id") Long compositionId) {
-        model.addAttribute("composition", compositionService.getCurrentCompositionForView(compositionId));
-        model.addAttribute("changeRequest", new ChangeRequestDto());
-        return "old-view";
+    public ResponseEntity<CompositionDto> showComposition(
+            @PathVariable(name = "id") Long compositionId
+    ) {
+        var composition = compositionService.getCurrentCompositionForView(compositionId);
+        return ResponseEntity.ok(composition);
     }
 
     @GetMapping("/composition/{id}/play")
-    public String playComposition(
+    public ResponseEntity<String> playComposition(
             @PathVariable(name = "id") Long compositionId,
-            @RequestParam(name = "measure", required = false) Integer measureIndex,
-            RedirectAttributes att) {
+            @RequestParam(name = "measure", required = false) Integer measureIndex
+    ) {
         var myComposition = compositionService.getCurrentComposition(compositionId);
         midiPlaybackService.playMyComposition(myComposition, measureIndex);
-        att.addFlashAttribute("message", "Playing...");
-
-        return "redirect:/composer/composition/" + compositionId;
+        return ResponseEntity.ok("Playing composition from measure " + (measureIndex + 1));
     }
 
     @GetMapping("/composition/{id}/stop")
-    public String stopPlayingComposition(
-            @PathVariable(name = "id") Long compositionId,
-            RedirectAttributes att) {
+    public ResponseEntity<String> stopPlayingComposition(
+            @PathVariable(name = "id") Long compositionId
+    ) {
         midiPlaybackService.stopPlayingCurrentComposition();
-        att.addFlashAttribute("message", "Stopped.");
-        return "redirect:/composer/composition/" + compositionId;
+        return ResponseEntity.ok("Playing stopped.");
     }
 
-    @GetMapping("/composition/{id}/shiftDown")
-    public String shiftDown(
+    @GetMapping("/composition/{id}/shift")
+    public ResponseEntity<CompositionDto> shiftSpecialShifter(
             @PathVariable(name = "id") Long compositionId,
-            @RequestParam(name = "index") Integer measureIndex,
-            RedirectAttributes att) {
-
+            @RequestParam(name = "measure") Integer measureIndex,
+            @RequestParam(name = "shifter") Integer shifter
+    ) {
         var currentComposition = compositionService.getCurrentComposition(compositionId);
-        postProductionService.shiftUserSpecialShifters(currentComposition, measureIndex, -1);
+        postProductionService.shiftUserSpecialShifters(currentComposition, measureIndex, shifter);
 
-        att.addFlashAttribute("message", "Measure " + (measureIndex + 1) + " shifted down.");
-        return "redirect:/composer/composition/" + compositionId;
-    }
-
-    @GetMapping("/composition/{id}/shiftUp")
-    public String shiftUp(
-            @PathVariable(name = "id") Long compositionId,
-            @RequestParam(name = "index") Integer measureIndex,
-            RedirectAttributes att) {
-
-        var currentComposition = compositionService.getCurrentComposition(compositionId);
-        postProductionService.shiftUserSpecialShifters(currentComposition, measureIndex, 1);
-
-        att.addFlashAttribute("message", "Measure " + (measureIndex + 1) + " shifted up.");
-        return "redirect:/composer/composition/" + compositionId;
+        return ResponseEntity.ok(compositionService.getCurrentCompositionForView(compositionId));
     }
 
     @GetMapping("/composition/{id}/save")
@@ -87,6 +73,14 @@ public class ComposerController {
         compositionId = compositionService.getCurrentComposition().getId();
         att.addFlashAttribute("message", message);
         return "redirect:/composer/composition/" + compositionId;
+    }
+
+    @DeleteMapping("/composition/{id}/delete")
+    public ResponseEntity<String> deleteComposition(
+            @PathVariable(name = "id") Long compositionId
+    ) {
+        String message = compositionService.deleteCompositionById(compositionId);
+        return ResponseEntity.ok(message);
     }
 
     @PostMapping("/composition/{id}/change")
