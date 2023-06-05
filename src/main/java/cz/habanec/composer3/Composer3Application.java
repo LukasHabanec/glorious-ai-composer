@@ -8,6 +8,7 @@ import cz.habanec.composer3.entities.CompositionForm;
 import cz.habanec.composer3.entities.enums.Eccentricity;
 import cz.habanec.composer3.entities.enums.ModusLabel;
 import cz.habanec.composer3.midi.MidiPlaybackService;
+import cz.habanec.composer3.migration.HookDMigrationService;
 import cz.habanec.composer3.repositories.CompositionFormRepo;
 import cz.habanec.composer3.repositories.CompositionRepo;
 import cz.habanec.composer3.repositories.MelodyMeasureRepo;

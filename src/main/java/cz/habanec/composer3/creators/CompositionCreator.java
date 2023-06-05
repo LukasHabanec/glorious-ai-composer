@@ -4,10 +4,13 @@ import cz.habanec.composer3.entities.enums.ModusLabel;
 import cz.habanec.composer3.entities.enums.NoteLength;
 import cz.habanec.composer3.entities.enums.Eccentricity;
 import cz.habanec.composer3.service.*;
+import cz.habanec.composer3.service.PatternService.TunePatternSetIngredients;
 import lombok.Builder;
 import lombok.RequiredArgsConstructor;
 import lombok.Value;
 import org.springframework.stereotype.Component;
+
+import java.util.stream.Collectors;
 
 import static cz.habanec.composer3.utils.PatternStringUtils.getUniqueSymbolsCount;
 import static cz.habanec.composer3.utils.ProbabilityUtils.RANDOM;
@@ -23,7 +26,6 @@ public class CompositionCreator {
     private final CompositionBuilder compositionBuilder;
     private final PatternService patternService;
     private final RhythmPatternCreator rhythmPatternCreator;
-    private final TunePatternCreator tunePatternCreator;
     private final CompositionFormService formService;
     private final TimeSignatureService timeSignatureService;
 
@@ -45,14 +47,19 @@ public class CompositionCreator {
         var rhythmRepetitionDensityOptions = getRandomAndShuffledCustomOptionsListEvenlyBounded(
                 rhythmSchemeSymbolsCount, 0, 100);
 
-        var rhythmEccentricOptions = getRandomAndShuffledCustomOptionsListEvenlyBounded(
-                rhythmSchemeSymbolsCount, 0, 1);
+        var rhythmEccentricityOptions = getRandomAndShuffledCustomOptionsListEvenlyBounded(
+                rhythmSchemeSymbolsCount, 0, 1).stream()
+                .map(n -> {
+                    if (n == 1) return Eccentricity.HIGH;
+                    return Eccentricity.LOW;
+                    })
+                .collect(Collectors.toList());
 
-        var rhythmPatterns = rhythmPatternCreator.createRhythmPatternsSet(
-                RhythmPatternCreator.RhythmPatternSetIngredients.builder()
+        var rhythmPatterns = patternService.createRhythmPatternsSet(
+                PatternService.RhythmPatternSetIngredients.builder()
                         .formId(form.getId())
                         .timeSignature(timeSignature)
-                        .eccentricOptions(rhythmEccentricOptions)
+                        .eccentricityOptions(rhythmEccentricityOptions)
                         .granularityOptions(rhythmGranularityOptions)
                         .valueCountOptions(rhythmValueCountOptions)
                         .build());
@@ -68,8 +75,8 @@ public class CompositionCreator {
         var tuneEccentricityOptions = getRandomAndShuffledCustomOptionsListEvenlyBounded(
                 tuneSchemaSymbolsCount, 0, Eccentricity.values().length - 1);
 
-        var tunePatterns = tunePatternCreator.createTunePatternsSet(
-                TunePatternCreator.TunePatternSetIngredients.builder()
+        var tunePatterns = patternService.collectCreatedTunePatternsSet(
+                TunePatternSetIngredients.builder()
                         .formId(form.getId())
                         .eccentricityOptions(tuneEccentricityOptions)
                         .ambitusOptions(tunePatternAmbitusOptions)
@@ -77,7 +84,7 @@ public class CompositionCreator {
                         .build()
         );
 
-        var repetitionPatterns = tunePatternCreator.createRepetitionPatternSet(
+        var repetitionPatterns = patternService.collectCreatedRepetitionPatternSet(
                 rhythmPatterns, rhythmRepetitionDensityOptions);
 
         var tempo = RANDOM.nextInt(60, 260);

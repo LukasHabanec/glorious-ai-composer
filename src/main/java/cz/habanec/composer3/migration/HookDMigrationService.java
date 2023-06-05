@@ -1,11 +1,15 @@
-package cz.habanec.composer3.service;
+package cz.habanec.composer3.migration;
 
 import cz.habanec.composer3.entities.Composition;
 import cz.habanec.composer3.entities.CompositionForm;
 import cz.habanec.composer3.repositories.CompositionFormRepo;
 import cz.habanec.composer3.repositories.MelodyRhythmPatternRepo;
 import cz.habanec.composer3.repositories.MelodyTunePatternRepo;
+import cz.habanec.composer3.service.CompositionBuilder;
 import cz.habanec.composer3.service.CompositionBuilder.NewCompositionIngredients;
+import cz.habanec.composer3.service.PatternService;
+import cz.habanec.composer3.service.TimeSignatureService;
+import cz.habanec.composer3.service.TonalKeyService;
 import cz.habanec.composer3.utils.AlphabetUtils;
 import cz.habanec.composer3.utils.PatternStringUtils;
 import lombok.Builder;

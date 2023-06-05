@@ -21,7 +21,7 @@ public class PostProductionService {
 //                composition.getAccompaniment().getMeasureList()
 //        );
         System.out.printf("PostProductionService::shiftUserSpecialShifters shifted by %d from the measure %d%n",
-                shifter, measureIndex +1 );
+                shifter, measureIndex + 1 );
     }
 
 }
